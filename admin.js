@@ -49,7 +49,7 @@ document.getElementById("form").onsubmit = async function (e) {
       {
         title: title,
         category: category,
-        body: body
+        content: body
       }
     ]);
 

@@ -7,6 +7,7 @@ const supabaseClient = supabase.createClient(
 );
 
 const PASSWORD = "AKASHRURU";
+const BUCKET = "story-images";
 
 async function login() {
   const password = document.getElementById("pass").value;
@@ -40,13 +41,58 @@ document.getElementById("form").onsubmit = async function(e) {
   const title = document.getElementById("title").value.trim();
   const category = document.getElementById("cat").value;
   const body = document.getElementById("body").value.trim();
+  const imageFile = document.getElementById("image").files[0];
 
+  let imageUrl = null;
+
+  // Upload photo
+  if (imageFile) {
+
+    if (!imageFile.type.startsWith("image/")) {
+      alert("Sirf image file upload karo.");
+      return;
+    }
+
+    if (imageFile.size > 5 * 1024 * 1024) {
+      alert("Photo 5 MB se chhoti honi chahiye.");
+      return;
+    }
+
+    const fileExt = imageFile.name.split(".").pop();
+
+    const fileName =
+      Date.now() +
+      "-" +
+      Math.random().toString(36).substring(2) +
+      "." +
+      fileExt;
+
+    const { error: uploadError } = await supabaseClient
+      .storage
+      .from(BUCKET)
+      .upload(fileName, imageFile);
+
+    if (uploadError) {
+      alert("Photo upload nahi hui: " + uploadError.message);
+      return;
+    }
+
+    const { data } = supabaseClient
+      .storage
+      .from(BUCKET)
+      .getPublicUrl(fileName);
+
+    imageUrl = data.publicUrl;
+  }
+
+  // Save story
   const { error } = await supabaseClient
     .from("stories")
     .insert({
       title: title,
       category: category,
-      body: body
+      body: body,
+      image_url: imageUrl
     });
 
   if (error) {
@@ -61,6 +107,7 @@ document.getElementById("form").onsubmit = async function(e) {
 };
 
 async function loadStories() {
+
   const { data, error } = await supabaseClient
     .from("stories")
     .select("*")
@@ -75,16 +122,34 @@ async function loadStories() {
   document.getElementById("list").innerHTML =
     data.map(story => `
       <div class="item">
+
+        ${story.image_url ? `
+          <img
+            src="${story.image_url}"
+            style="
+              width:120px;
+              height:80px;
+              object-fit:cover;
+              border-radius:8px;
+            "
+          >
+        ` : ""}
+
         <div>
           <b>${escapeHTML(story.title)}</b><br>
           <small>${escapeHTML(story.category)}</small>
         </div>
-        <button onclick="deleteStory('${story.id}')">Delete</button>
+
+        <button onclick="deleteStory('${story.id}')">
+          Delete
+        </button>
+
       </div>
     `).join("") || "<p>No stories yet.</p>";
 }
 
 async function deleteStory(id) {
+
   const { error } = await supabaseClient
     .from("stories")
     .delete()
@@ -100,10 +165,10 @@ async function deleteStory(id) {
 
 function escapeHTML(text) {
   return String(text).replace(/[&<>"']/g, m => ({
-    "&":"&amp;",
-    "<":"&lt;",
-    ">":"&gt;",
-    '"':"&quot;",
-    "'":"&#39;"
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
   }[m]));
 }

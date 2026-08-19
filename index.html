@@ -1,4 +1,156 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AkashRuru Stories</title><link rel="stylesheet" href="style.css"></head><body>
-<header><nav><b>Akash<span>Ruru</span></b><div><a href="#stories">Stories</a><a href="#about">About</a><a class="admin" href="admin.html">Admin</a></div></nav><section class="hero"><small>WORDS • FEELINGS • MEMORIES</small><h1>Every story has a feeling.</h1><p>Romantic, sad, horror, friendship and stories that stay with you.</p><a class="btn" href="#stories">Explore Stories</a></section></header>
-<main><section id="stories"><small>THE COLLECTION</small><h2>Latest Stories</h2><div id="filters" class="filters"><button class="on" data-c="All">All</button><button data-c="Romantic">Romantic</button><button data-c="Sad">Sad</button><button data-c="Horror">Horror</button><button data-c="Friendship">Friendship</button><button data-c="Other">Other</button></div><input id="search" class="search" placeholder="Search stories..."><div id="grid" class="grid"></div></section><section id="about" class="about"><h2>AkashRuru</h2><p>A little home for stories, emotions and imagination.</p></section></main><div id="reader" class="reader"><div class="box"><button onclick="closeReader()">×</button><small id="rc"></small><h2 id="rt"></h2><p id="rb"></p></div></div><footer>© <span id="year"></span> AkashRuru Stories</footer><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="app.js"></script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+
+  <title>AkashRuru Stories</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+
+  <nav>
+    <a class="logo" href="#">
+      <span class="logo-mark">A</span>
+      <span>Akash<span class="pink">Ruru</span></span>
+    </a>
+
+    <div class="navlinks">
+      <a href="#stories">Stories</a>
+      <a href="#about">About</a>
+      <a class="admin" href="admin.html">Admin</a>
+    </div>
+  </nav>
+
+  <section class="hero">
+
+    <div class="hero-glow"></div>
+
+    <small>✦ WORDS • FEELINGS • MEMORIES ✦</small>
+
+    <h1>
+      Every story<br>
+      has a <span>feeling.</span>
+    </h1>
+
+    <p>
+      Romantic moments, broken hearts, mysterious nights,
+      beautiful friendships and stories that stay forever.
+    </p>
+
+    <div class="hero-buttons">
+      <a class="btn" href="#stories">Explore Stories</a>
+      <button id="musicBtn" class="music-btn">
+        🎵 Play Music
+      </button>
+    </div>
+
+  </section>
+</header>
+
+
+<main>
+
+  <section id="stories">
+
+    <small class="section-label">THE COLLECTION</small>
+
+    <div class="section-heading">
+      <div>
+        <h2>Latest Stories</h2>
+        <p>Choose a feeling and start reading.</p>
+      </div>
+    </div>
+
+    <div id="filters" class="filters">
+      <button class="on" data-c="All">All</button>
+      <button data-c="Romantic">❤️ Romantic</button>
+      <button data-c="Sad">💔 Sad</button>
+      <button data-c="Horror">👻 Horror</button>
+      <button data-c="Friendship">🤝 Friendship</button>
+      <button data-c="Other">✨ Other</button>
+    </div>
+
+    <input
+      id="search"
+      class="search"
+      placeholder="🔍 Search stories..."
+    >
+
+    <div id="grid" class="grid"></div>
+
+  </section>
+
+
+  <section id="about" class="about">
+
+    <div class="about-logo">
+      <span class="logo-mark">A</span>
+      <span>Akash<span class="pink">Ruru</span></span>
+    </div>
+
+    <h2>A little home for stories.</h2>
+
+    <p>
+      Stories written with feelings, memories and imagination.
+      Read something that touches your heart.
+    </p>
+
+  </section>
+
+</main>
+
+
+<!-- STORY READER -->
+
+<div id="reader" class="reader">
+
+  <div class="box">
+
+    <button class="close" onclick="closeReader()">×</button>
+
+    <img id="readerImage" class="reader-image" alt="Story image">
+
+    <small id="rc"></small>
+
+    <h2 id="rt"></h2>
+
+    <div class="reader-line"></div>
+
+    <p id="rb"></p>
+
+    <button id="shareBtn" class="share-btn">
+      🔗 Share Story
+    </button>
+
+  </div>
+
+</div>
+
+
+<footer>
+  <div class="footer-logo">
+    Akash<span>Ruru</span>
+  </div>
+
+  <p>Stories • Feelings • Memories</p>
+
+  <small>
+    © <span id="year"></span> AkashRuru Stories
+  </small>
+</footer>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="app.js"></script>
+
+</body>
+</html>

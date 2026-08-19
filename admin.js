@@ -1,23 +1,30 @@
 const PASSWORD = "AKASHRURU";
 
-let stories =
-  JSON.parse(localStorage.getItem("arStories") || "null") || [];
+const SUPABASE_URL = "https://bxgtcnagqjtfbsztgnmb.supabase.co";
+const SUPABASE_KEY = "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
 
-function login() {
+const supabaseClient = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let stories = [];
+
+async function login() {
   const password = document.getElementById("pass").value;
 
   if (password === PASSWORD) {
     sessionStorage.arLogin = "1";
-    showDashboard();
+    await showDashboard();
   } else {
     document.getElementById("err").textContent = "Wrong password.";
   }
 }
 
-function showDashboard() {
+async function showDashboard() {
   document.getElementById("login").classList.add("hidden");
   document.getElementById("dash").classList.remove("hidden");
-  renderStories();
+  await renderStories();
 }
 
 function logout() {
@@ -29,61 +36,80 @@ if (sessionStorage.arLogin === "1") {
   showDashboard();
 }
 
-document.getElementById("form").onsubmit = function (e) {
+document.getElementById("form").onsubmit = async function (e) {
   e.preventDefault();
 
   const title = document.getElementById("title").value.trim();
   const category = document.getElementById("cat").value;
   const body = document.getElementById("body").value.trim();
 
-  stories.unshift({
-    id: Date.now(),
-    title: title,
-    category: category,
-    body: body
-  });
+  const { error } = await supabaseClient
+    .from("stories")
+    .insert([
+      {
+        title: title,
+        category: category,
+        body: body
+      }
+    ]);
 
-  saveStories();
+  if (error) {
+    alert("Story save nahi hui: " + error.message);
+    return;
+  }
+
   e.target.reset();
-  renderStories();
+  await renderStories();
 };
 
-function saveStories() {
-  localStorage.setItem("arStories", JSON.stringify(stories));
-}
-
-function renderStories() {
+async function renderStories() {
   const list = document.getElementById("list");
+
+  const { data, error } = await supabaseClient
+    .from("stories")
+    .select("*")
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    list.innerHTML = "<p>Stories load nahi hui.</p>";
+    console.error(error);
+    return;
+  }
+
+  stories = data || [];
 
   list.innerHTML =
     stories
-      .map(
-        function (story) {
-          return `
-            <div class="item">
-              <div>
-                <b>${escapeHTML(story.title)}</b>
-                <br>
-                <small>${escapeHTML(story.category)}</small>
-              </div>
-
-              <button onclick="deleteStory(${story.id})">
-                Delete
-              </button>
+      .map(function (story) {
+        return `
+          <div class="item">
+            <div>
+              <b>${escapeHTML(story.title)}</b>
+              <br>
+              <small>${escapeHTML(story.category)}</small>
             </div>
-          `;
-        }
-      )
+
+            <button onclick="deleteStory('${story.id}')">
+              Delete
+            </button>
+          </div>
+        `;
+      })
       .join("") || "<p>No stories yet.</p>";
 }
 
-function deleteStory(id) {
-  stories = stories.filter(function (story) {
-    return story.id !== id;
-  });
+async function deleteStory(id) {
+  const { error } = await supabaseClient
+    .from("stories")
+    .delete()
+    .eq("id", id);
 
-  saveStories();
-  renderStories();
+  if (error) {
+    alert("Delete nahi hui: " + error.message);
+    return;
+  }
+
+  await renderStories();
 }
 
 function escapeHTML(text) {

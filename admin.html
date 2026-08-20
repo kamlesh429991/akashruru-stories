@@ -3,61 +3,287 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+
   <title>AkashRuru Admin</title>
+
   <link rel="stylesheet" href="style.css">
+
+  <style>
+    .admin-wrap{
+      width:min(900px,94vw);
+      margin:40px auto;
+    }
+
+    .admin-tabs{
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:20px 0;
+    }
+
+    .admin-tabs button{
+      padding:10px 15px;
+      border-radius:20px;
+      border:1px solid #40303f;
+      background:#18121c;
+      color:#eee;
+      cursor:pointer;
+    }
+
+    .admin-tabs button.active{
+      background:#ff79b7;
+      color:#210c19;
+    }
+
+    .admin-section{
+      display:none;
+    }
+
+    .admin-section.active{
+      display:block;
+    }
+
+    .story-admin{
+      padding:16px 0;
+      border-bottom:1px solid #342534;
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:15px;
+    }
+
+    .story-admin-info{
+      display:flex;
+      align-items:center;
+      gap:14px;
+    }
+
+    .story-admin img{
+      width:70px;
+      height:60px;
+      object-fit:cover;
+      border-radius:10px;
+    }
+
+    .admin-actions{
+      display:flex;
+      gap:7px;
+      flex-wrap:wrap;
+    }
+
+    .admin-actions button{
+      border:1px solid #493148;
+      background:#211521;
+      color:#eee;
+      padding:8px 11px;
+      border-radius:8px;
+      cursor:pointer;
+    }
+
+    .admin-actions .delete{
+      color:#ff8cae;
+    }
+
+    .file-name{
+      color:#9e8e9d;
+      font:12px Arial;
+      margin:5px 0 12px;
+    }
+  </style>
 </head>
 
 <body>
+
 <main class="adminpage">
 
+  <!-- LOGIN -->
+
   <div id="login" class="panel">
+
     <h1>AkashRuru Admin</h1>
+
     <p>Enter your admin password.</p>
 
-    <input id="pass" type="password" placeholder="Password">
-    <button class="btn" onclick="login()">Login</button>
+    <input
+      id="pass"
+      type="password"
+      placeholder="Password"
+    >
+
+    <button
+      class="btn"
+      onclick="login()">
+      Login
+    </button>
 
     <p id="err"></p>
+
   </div>
 
-  <div id="dash" class="panel hidden">
+
+  <!-- DASHBOARD -->
+
+  <div
+    id="dash"
+    class="panel admin-wrap hidden">
 
     <div class="top">
-      <h1>Story Manager</h1>
-      <button onclick="logout()">Logout</button>
-    </div>
 
-    <form id="form">
+      <div>
 
-      <input id="title" required placeholder="Story title">
+        <small>AKASHRURU</small>
 
-      <select id="cat">
-        <option>Romantic</option>
-        <option>Sad</option>
-        <option>Horror</option>
-        <option>Friendship</option>
-        <option>Other</option>
-      </select>
+        <h1>Story Manager</h1>
 
-      <label>Story Photo</label>
-      <input id="image" type="file" accept="image/*">
+      </div>
 
-      <textarea id="body" required placeholder="Write your story..."></textarea>
-
-      <button class="btn" type="submit">
-        Publish Story
+      <button onclick="logout()">
+        Logout
       </button>
 
-    </form>
+    </div>
 
-    <h2>Your Stories</h2>
-    <div id="list"></div>
+
+    <!-- TABS -->
+
+    <div class="admin-tabs">
+
+      <button
+        class="active"
+        onclick="showAdminTab('stories',this)">
+        📚 Stories
+      </button>
+
+      <button
+        onclick="showAdminTab('password',this)">
+        🔐 Password
+      </button>
+
+    </div>
+
+
+    <!-- STORIES -->
+
+    <section
+      id="stories"
+      class="admin-section active">
+
+      <form id="form">
+
+        <input
+          id="title"
+          required
+          placeholder="Story title"
+        >
+
+        <select id="cat">
+
+          <option>Romantic</option>
+          <option>Sad</option>
+          <option>Horror</option>
+          <option>Friendship</option>
+          <option>Other</option>
+
+        </select>
+
+
+        <label>
+          Story Photo
+        </label>
+
+        <input
+          id="image"
+          type="file"
+          accept="image/jpeg,image/png,image/webp"
+        >
+
+        <div
+          id="fileName"
+          class="file-name">
+        </div>
+
+
+        <textarea
+          id="body"
+          required
+          placeholder="Write your story..."
+        ></textarea>
+
+
+        <button
+          class="btn"
+          type="submit">
+
+          ❤️ Publish Story
+
+        </button>
+
+      </form>
+
+
+      <h2>
+        Your Stories
+      </h2>
+
+      <div id="list"></div>
+
+    </section>
+
+
+    <!-- PASSWORD -->
+
+    <section
+      id="password"
+      class="admin-section">
+
+      <h2>
+        Change Password
+      </h2>
+
+      <p>
+        Change the password used for this browser's admin panel.
+      </p>
+
+
+      <input
+        id="oldPassword"
+        type="password"
+        placeholder="Current password"
+      >
+
+      <input
+        id="newPassword"
+        type="password"
+        placeholder="New password"
+      >
+
+      <input
+        id="confirmPassword"
+        type="password"
+        placeholder="Confirm new password"
+      >
+
+
+      <button
+        class="btn"
+        onclick="changePassword()">
+
+        🔐 Change Password
+
+      </button>
+
+
+      <p id="passwordMessage"></p>
+
+    </section>
 
   </div>
 
 </main>
 
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="admin.js"></script>
 
 </body>

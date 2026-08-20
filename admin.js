@@ -8,114 +8,65 @@ const supabaseClient = supabase.createClient(
 
 const STORAGE_BUCKET = "story-images";
 
-const DEFAULT_PASSWORD = "AKASHRURU";
-
 let editingId = null;
 
 
 /* =========================
-   PASSWORD
+   LOGIN
 ========================= */
 
-function getPassword() {
-  return localStorage.getItem("arAdminPassword") ||
-         DEFAULT_PASSWORD;
-}
+async function login() {
 
-
-function login() {
+  const email =
+    document.getElementById("email")?.value.trim();
 
   const password =
     document.getElementById("pass").value;
 
-  if (password === getPassword()) {
+  const err =
+    document.getElementById("err");
 
-    sessionStorage.setItem(
-      "arLogin",
-      "1"
-    );
 
-    showDashboard();
+  if (!email) {
 
-  } else {
+    err.textContent =
+      "Email enter karo.";
 
-    document.getElementById("err").textContent =
-      "Wrong password.";
+    return;
   }
+
+
+  const { error } =
+    await supabaseClient.auth.signInWithPassword({
+      email: email,
+      password: password
+    });
+
+
+  if (error) {
+
+    err.textContent =
+      error.message;
+
+    return;
+  }
+
+
+  err.textContent = "";
+
+  showDashboard();
 }
 
 
-function logout() {
+/* =========================
+   LOGOUT
+========================= */
 
-  sessionStorage.removeItem("arLogin");
+async function logout() {
+
+  await supabaseClient.auth.signOut();
 
   location.reload();
-}
-
-
-function changePassword() {
-
-  const oldPassword =
-    document.getElementById("oldPassword").value;
-
-  const newPassword =
-    document.getElementById("newPassword").value;
-
-  const confirmPassword =
-    document.getElementById("confirmPassword").value;
-
-  const message =
-    document.getElementById("passwordMessage");
-
-
-  if (oldPassword !== getPassword()) {
-
-    message.textContent =
-      "Current password is wrong.";
-
-    return;
-  }
-
-
-  if (newPassword.length < 6) {
-
-    message.textContent =
-      "New password must be at least 6 characters.";
-
-    return;
-  }
-
-
-  if (newPassword !== confirmPassword) {
-
-    message.textContent =
-      "New passwords do not match.";
-
-    return;
-  }
-
-
-  localStorage.setItem(
-    "arAdminPassword",
-    newPassword
-  );
-
-
-  message.textContent =
-    "Password changed successfully!";
-
-
-  document.getElementById(
-    "oldPassword"
-  ).value = "";
-
-  document.getElementById(
-    "newPassword"
-  ).value = "";
-
-  document.getElementById(
-    "confirmPassword"
-  ).value = "";
 }
 
 
@@ -123,7 +74,29 @@ function changePassword() {
    DASHBOARD
 ========================= */
 
-function showDashboard() {
+async function showDashboard() {
+
+  const {
+    data: {
+      session
+    }
+  } =
+    await supabaseClient.auth.getSession();
+
+
+  if (!session) {
+
+    document
+      .getElementById("login")
+      .classList.remove("hidden");
+
+    document
+      .getElementById("dash")
+      .classList.add("hidden");
+
+    return;
+  }
+
 
   document
     .getElementById("login")
@@ -133,42 +106,8 @@ function showDashboard() {
     .getElementById("dash")
     .classList.remove("hidden");
 
+
   loadStories();
-}
-
-
-/* =========================
-   ADMIN TABS
-========================= */
-
-function showAdminTab(id, button) {
-
-  document
-    .querySelectorAll(".admin-section")
-    .forEach(function(section) {
-
-      section.classList.remove("active");
-
-    });
-
-
-  document
-    .querySelectorAll(".admin-tabs button")
-    .forEach(function(btn) {
-
-      btn.classList.remove("active");
-
-    });
-
-
-  document
-    .getElementById(id)
-    .classList.add("active");
-
-
-  if (button) {
-    button.classList.add("active");
-  }
 }
 
 
@@ -213,8 +152,7 @@ if (imageInput) {
 
 async function uploadImage(file) {
 
-  if (!file)
-    return null;
+  if (!file) return null;
 
 
   const allowedTypes = [
@@ -235,7 +173,7 @@ async function uploadImage(file) {
   if (file.size > 5 * 1024 * 1024) {
 
     throw new Error(
-      "Image size must be 5MB or less."
+      "Image must be 5MB or smaller."
     );
   }
 
@@ -273,9 +211,7 @@ async function uploadImage(file) {
       );
 
 
-  if (error) {
-    throw error;
-  }
+  if (error) throw error;
 
 
   const { data } =
@@ -290,7 +226,7 @@ async function uploadImage(file) {
 
 
 /* =========================
-   PUBLISH / EDIT STORY
+   PUBLISH / UPDATE
 ========================= */
 
 document
@@ -338,17 +274,17 @@ document
       }
 
 
-      const submitButton =
+      const button =
         document.querySelector(
           "#form button[type='submit']"
         );
 
 
-      submitButton.disabled = true;
+      button.disabled = true;
 
-      submitButton.textContent =
+      button.textContent =
         editingId
-          ? "Saving..."
+          ? "Updating..."
           : "Publishing...";
 
 
@@ -357,34 +293,26 @@ document
         let imageUrl = null;
 
 
-        /*
-          EDITING:
-          Existing image ko preserve karenge
-          agar new image select nahi ki.
-        */
+        /* Existing image during edit */
 
         if (editingId) {
 
           const oldStory =
             await getStory(editingId);
 
-          imageUrl =
-            oldStory
-              ? oldStory.image_url
-              : null;
-
+          if (oldStory) {
+            imageUrl =
+              oldStory.image_url || null;
+          }
         }
 
 
-        /*
-          NEW IMAGE
-        */
+        /* New image */
 
         if (image) {
 
           imageUrl =
             await uploadImage(image);
-
         }
 
 
@@ -417,13 +345,10 @@ document
               .insert(storyData);
 
           error = result.error;
-
         }
 
 
-        if (error) {
-          throw error;
-        }
+        if (error) throw error;
 
 
         alert(
@@ -435,7 +360,7 @@ document
 
         resetForm();
 
-        await loadStories();
+        loadStories();
 
 
       } catch(error) {
@@ -443,16 +368,16 @@ document
         console.error(error);
 
         alert(
-          "Story save nahi hui: " +
+          "Error: " +
           error.message
         );
 
       }
 
 
-      submitButton.disabled = false;
+      button.disabled = false;
 
-      submitButton.textContent =
+      button.textContent =
         "❤️ Publish Story";
 
     }
@@ -460,7 +385,7 @@ document
 
 
 /* =========================
-   GET ONE STORY
+   GET STORY
 ========================= */
 
 async function getStory(id) {
@@ -506,7 +431,7 @@ async function loadStories() {
       .order(
         "created_at",
         {
-          ascending:false
+          ascending: false
         }
       );
 
@@ -594,7 +519,7 @@ async function loadStories() {
 
 
 /* =========================
-   EDIT STORY
+   EDIT
 ========================= */
 
 async function editStory(id) {
@@ -603,8 +528,7 @@ async function editStory(id) {
     await getStory(id);
 
 
-  if (!story)
-    return;
+  if (!story) return;
 
 
   editingId = id;
@@ -637,31 +561,26 @@ async function editStory(id) {
     "fileName"
   ).textContent =
     story.image_url
-      ? "Existing photo will be kept unless you select a new one."
+      ? "Existing photo will remain unless you choose a new one."
       : "No existing photo";
 
 
-  const button =
-    document.querySelector(
-      "#form button[type='submit']"
-    );
-
-
-  button.textContent =
+  document.querySelector(
+    "#form button[type='submit']"
+  ).textContent =
     "💾 Update Story";
 
 
   document
     .getElementById("form")
     .scrollIntoView({
-      behavior:"smooth"
+      behavior: "smooth"
     });
-
 }
 
 
 /* =========================
-   RESET FORM
+   RESET
 ========================= */
 
 function resetForm() {
@@ -687,18 +606,10 @@ function resetForm() {
 
 
 /* =========================
-   DELETE STORY
+   DELETE
 ========================= */
 
 async function deleteStory(id) {
-
-  const story =
-    await getStory(id);
-
-
-  if (!story)
-    return;
-
 
   const confirmed =
     confirm(
@@ -706,8 +617,7 @@ async function deleteStory(id) {
     );
 
 
-  if (!confirmed)
-    return;
+  if (!confirmed) return;
 
 
   const { error } =
@@ -720,7 +630,7 @@ async function deleteStory(id) {
   if (error) {
 
     alert(
-      "Delete nahi hui: " +
+      "Delete failed: " +
       error.message
     );
 
@@ -733,7 +643,7 @@ async function deleteStory(id) {
   );
 
 
-  await loadStories();
+  loadStories();
 }
 
 
@@ -749,11 +659,11 @@ function escapeHTML(text) {
       function(m) {
 
         return {
-          "&":"&amp;",
-          "<":"&lt;",
-          ">":"&gt;",
-          '"':"&quot;",
-          "'":"&#39;"
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;"
         }[m];
 
       }
@@ -762,13 +672,7 @@ function escapeHTML(text) {
 
 
 /* =========================
-   AUTO LOGIN
+   START
 ========================= */
 
-if (
-  sessionStorage.getItem("arLogin") === "1"
-) {
-
-  showDashboard();
-
-}
+showDashboard();

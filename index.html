@@ -8,6 +8,7 @@
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
 
   <link rel="stylesheet" href="style.css">
@@ -18,6 +19,7 @@
 <header>
 
   <nav>
+
     <a class="logo" href="#">
       <span class="logo-mark">A</span>
       <span>Akash<span class="pink">Ruru</span></span>
@@ -25,14 +27,15 @@
 
     <div class="navlinks">
       <a href="#stories">Stories</a>
+      <a href="#trending">Trending</a>
       <a href="#about">About</a>
       <a class="admin" href="admin.html">Admin</a>
     </div>
+
   </nav>
 
-  <section class="hero">
 
-    <div class="hero-glow"></div>
+  <section class="hero">
 
     <small>✦ WORDS • FEELINGS • MEMORIES ✦</small>
 
@@ -47,37 +50,123 @@
     </p>
 
     <div class="hero-buttons">
-      <a class="btn" href="#stories">Explore Stories</a>
+
+      <a class="btn" href="#stories">
+        Explore Stories
+      </a>
+
       <button id="musicBtn" class="music-btn">
         🎵 Play Music
       </button>
+
+      <button id="randomBtn" class="music-btn">
+        🎲 Surprise Me
+      </button>
+
     </div>
 
   </section>
+
 </header>
 
 
 <main>
 
+  <!-- STATS -->
+
+  <section class="stats">
+
+    <div>
+      <strong id="storyCount">0</strong>
+      <span>Stories</span>
+    </div>
+
+    <div>
+      <strong id="viewCount">0</strong>
+      <span>Reads</span>
+    </div>
+
+    <div>
+      <strong id="likeCount">0</strong>
+      <span>Likes</span>
+    </div>
+
+  </section>
+
+
+  <!-- STORY OF DAY -->
+
+  <section id="featured" class="featured">
+
+    <div class="section-label">
+      STORY OF THE DAY
+    </div>
+
+    <div id="featuredBox">
+      Loading...
+    </div>
+
+  </section>
+
+
+  <!-- TRENDING -->
+
+  <section id="trending">
+
+    <div class="section-label">
+      TRENDING NOW
+    </div>
+
+    <h2>Popular Stories</h2>
+
+    <div id="trendingGrid" class="mini-grid"></div>
+
+  </section>
+
+
+  <!-- STORIES -->
+
   <section id="stories">
 
-    <small class="section-label">THE COLLECTION</small>
-
-    <div class="section-heading">
-      <div>
-        <h2>Latest Stories</h2>
-        <p>Choose a feeling and start reading.</p>
-      </div>
+    <div class="section-label">
+      THE COLLECTION
     </div>
+
+    <h2>Latest Stories</h2>
+
+    <p class="sub">
+      Choose a feeling and start reading.
+    </p>
+
 
     <div id="filters" class="filters">
-      <button class="on" data-c="All">All</button>
-      <button data-c="Romantic">❤️ Romantic</button>
-      <button data-c="Sad">💔 Sad</button>
-      <button data-c="Horror">👻 Horror</button>
-      <button data-c="Friendship">🤝 Friendship</button>
-      <button data-c="Other">✨ Other</button>
+
+      <button class="on" data-c="All">
+        All
+      </button>
+
+      <button data-c="Romantic">
+        ❤️ Romantic
+      </button>
+
+      <button data-c="Sad">
+        💔 Sad
+      </button>
+
+      <button data-c="Horror">
+        👻 Horror
+      </button>
+
+      <button data-c="Friendship">
+        🤝 Friendship
+      </button>
+
+      <button data-c="Other">
+        ✨ Other
+      </button>
+
     </div>
+
 
     <input
       id="search"
@@ -85,16 +174,22 @@
       placeholder="🔍 Search stories..."
     >
 
+
     <div id="grid" class="grid"></div>
 
   </section>
 
 
+  <!-- ABOUT -->
+
   <section id="about" class="about">
 
     <div class="about-logo">
       <span class="logo-mark">A</span>
-      <span>Akash<span class="pink">Ruru</span></span>
+
+      <span>
+        Akash<span class="pink">Ruru</span>
+      </span>
     </div>
 
     <h2>A little home for stories.</h2>
@@ -103,6 +198,10 @@
       Stories written with feelings, memories and imagination.
       Read something that touches your heart.
     </p>
+
+    <button id="submitStoryBtn" class="btn">
+      ✍️ Submit Your Story
+    </button>
 
   </section>
 
@@ -113,23 +212,90 @@
 
 <div id="reader" class="reader">
 
-  <div class="box">
+  <div class="reader-box">
 
-    <button class="close" onclick="closeReader()">×</button>
+    <button
+      class="close"
+      onclick="closeReader()">
+      ×
+    </button>
 
-    <img id="readerImage" class="reader-image" alt="Story image">
+
+    <div id="readerProgress"
+         class="reader-progress">
+    </div>
+
+
+    <img
+      id="readerImage"
+      class="reader-image"
+      alt="Story image"
+    >
+
 
     <small id="rc"></small>
 
     <h2 id="rt"></h2>
 
+
+    <div class="reader-tools">
+
+      <button id="likeBtn">
+        ❤️ <span id="readerLikes">0</span>
+      </button>
+
+      <button id="bookmarkBtn">
+        🔖 Bookmark
+      </button>
+
+      <button id="shareBtn">
+        🔗 Share
+      </button>
+
+      <button id="fontMinus">
+        A-
+      </button>
+
+      <button id="fontPlus">
+        A+
+      </button>
+
+    </div>
+
+
     <div class="reader-line"></div>
+
 
     <p id="rb"></p>
 
-    <button id="shareBtn" class="share-btn">
-      🔗 Share Story
-    </button>
+
+    <!-- COMMENTS -->
+
+    <section class="comments">
+
+      <h3>
+        💬 Comments
+      </h3>
+
+      <input
+        id="commentName"
+        placeholder="Your name"
+      >
+
+      <textarea
+        id="commentText"
+        placeholder="Write a comment..."
+      ></textarea>
+
+      <button
+        id="commentBtn"
+        class="btn">
+        Post Comment
+      </button>
+
+      <div id="commentsList"></div>
+
+    </section>
 
   </div>
 
@@ -137,19 +303,24 @@
 
 
 <footer>
+
   <div class="footer-logo">
     Akash<span>Ruru</span>
   </div>
 
-  <p>Stories • Feelings • Memories</p>
+  <p>
+    Stories • Feelings • Memories
+  </p>
 
   <small>
     © <span id="year"></span> AkashRuru Stories
   </small>
+
 </footer>
 
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script src="app.js"></script>
 
 </body>

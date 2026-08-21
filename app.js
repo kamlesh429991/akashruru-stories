@@ -8,11 +8,40 @@ const supabaseClient = supabase.createClient(
 
 let stories = [];
 let category = "All";
-let currentStory = null;
-let currentFontSize = 16;
 
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
+const audio = document.getElementById("audio");
+
+const musicTracks = {
+  romantic: [
+    {
+      name: "Romantic Piano",
+      url: ""
+    }
+  ],
+  sad: [
+    {
+      name: "Sad Piano",
+      url: ""
+    }
+  ],
+  horror: [
+    {
+      name: "Dark Atmosphere",
+      url: ""
+    }
+  ],
+  calm: [
+    {
+      name: "Calm Night",
+      url: ""
+    }
+  ]
+};
+
+let currentMood = "romantic";
+let currentTrack = 0;
 
 
 /* =========================
@@ -20,15 +49,18 @@ const search = document.getElementById("search");
 ========================= */
 
 function escapeHTML(text) {
-  return String(text || "").replace(/[&<>"']/g, function(m) {
-    return {
-      "&":"&amp;",
-      "<":"&lt;",
-      ">":"&gt;",
-      '"':"&quot;",
-      "'":"&#39;"
-    }[m];
-  });
+  return String(text || "").replace(
+    /[&<>"']/g,
+    function(m) {
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[m];
+    }
+  );
 }
 
 
@@ -38,10 +70,13 @@ function escapeHTML(text) {
 
 async function loadStories() {
 
-  const { data, error } = await supabaseClient
-    .from("stories")
-    .select("*")
-    .order("created_at", { ascending:false });
+  const { data, error } =
+    await supabaseClient
+      .from("stories")
+      .select("*")
+      .order("created_at", {
+        ascending: false
+      });
 
   if (error) {
 
@@ -55,69 +90,33 @@ async function loadStories() {
 
   stories = data || [];
 
-  updateStats();
+  updateStoryCount();
 
   render();
 
   renderFeatured();
-
-  renderTrending();
 }
 
 
 /* =========================
-   STATS
+   STORY COUNT
 ========================= */
 
-async function updateStats() {
+function updateStoryCount() {
 
-  const storyCount =
+  const counter =
     document.getElementById("storyCount");
 
-  const viewCount =
-    document.getElementById("viewCount");
+  if (counter) {
 
-  const likeCount =
-    document.getElementById("likeCount");
-
-
-  if (storyCount) {
-    storyCount.textContent =
+    counter.textContent =
       stories.length;
-  }
-
-
-  const { count: views } =
-    await supabaseClient
-      .from("story_views")
-      .select("*", {
-        count:"exact",
-        head:true
-      });
-
-  if (viewCount) {
-    viewCount.textContent =
-      views || 0;
-  }
-
-
-  const { count: likes } =
-    await supabaseClient
-      .from("story_likes")
-      .select("*", {
-        count:"exact",
-        head:true
-      });
-
-  if (likeCount) {
-    likeCount.textContent =
-      likes || 0;
   }
 }
 
 
 /* =========================
-   STORY CARDS
+   RENDER STORIES
 ========================= */
 
 function render() {
@@ -139,14 +138,11 @@ function render() {
         String(story.body || "")
           .toLowerCase();
 
-      const cat =
-        String(story.category || "");
-
 
       return (
         (category === "All" ||
-         cat === category) &&
-
+          story.category === category)
+        &&
         (
           !query ||
           title.includes(query) ||
@@ -157,78 +153,124 @@ function render() {
     });
 
 
+  if (!filtered.length) {
+
+    grid.innerHTML =
+      `
+      <div class="empty">
+        <h3>No stories found</h3>
+        <p>Try another category or search.</p>
+      </div>
+      `;
+
+    return;
+  }
+
+
   grid.innerHTML =
-    filtered.length
+    filtered.map(function(story) {
 
-      ? filtered.map(function(story) {
-
-          const image =
-            story.image_url
-              ? `
-                <img
-                  class="card-photo"
-                  src="${escapeHTML(story.image_url)}"
-                  alt="${escapeHTML(story.title)}"
-                  loading="lazy"
-                >
-              `
-              : "";
-
-
-          const words =
-            String(story.body || "")
-              .trim()
-              .split(/\s+/)
-              .length;
-
-          const readingTime =
-            Math.max(1, Math.ceil(words / 180));
-
-
-          return `
-
-            <article
-              class="card"
-              onclick="openReader('${story.id}')"
+      const image =
+        story.image_url
+          ? `
+            <img
+              src="${escapeHTML(story.image_url)}"
+              alt=""
+              style="
+                width:100%;
+                height:150px;
+                object-fit:cover;
+                border-radius:14px;
+                margin-bottom:15px;
+              "
             >
+          `
+          : "";
 
-              ${image}
 
-              <div class="card-content">
+      return `
+        <article
+          class="card"
+          onclick="openReader('${story.id}')">
 
-                <small>
-                  ${escapeHTML(story.category)}
-                </small>
+          ${image}
 
-                <h3>
-                  ${escapeHTML(story.title)}
-                </h3>
+          <small>
+            ${escapeHTML(story.category)}
+          </small>
 
-                <p>
-                  ${escapeHTML(story.body)}
-                </p>
+          <h3>
+            ${escapeHTML(story.title)}
+          </h3>
 
-                <div class="card-meta">
+          <p>
+            ${escapeHTML(story.body)}
+          </p>
 
-                  <span>
-                    ⏱ ${readingTime} min read
-                  </span>
+          <span class="read">
+            Read story →
+          </span>
 
-                  <span class="read">
-                    Read →
-                  </span>
+        </article>
+      `;
 
-                </div>
+    }).join("");
+}
 
-              </div>
 
-            </article>
+/* =========================
+   FEATURED STORIES
+========================= */
 
-          `;
+function renderFeatured() {
 
-        }).join("")
+  const container =
+    document.getElementById("featuredGrid");
 
-      : "<p>No stories found.</p>";
+  if (!container) return;
+
+
+  const featured =
+    stories.slice(0, 3);
+
+
+  if (!featured.length) {
+
+    container.innerHTML =
+      "<p>Stories coming soon...</p>";
+
+    return;
+  }
+
+
+  container.innerHTML =
+    featured.map(function(story) {
+
+      return `
+        <article
+          class="featured-card"
+          onclick="openReader('${story.id}')">
+
+          <small>
+            ${escapeHTML(story.category)}
+          </small>
+
+          <h3>
+            ${escapeHTML(story.title)}
+          </h3>
+
+          <p>
+            ${escapeHTML(story.body)}
+          </p>
+
+          <span class="read">
+            Read story →
+          </span>
+
+        </article>
+      `;
+
+    }).join("");
 }
 
 
@@ -240,21 +282,25 @@ document
   .querySelectorAll("#filters button")
   .forEach(function(button) {
 
-    button.onclick = function() {
+    button.onclick =
+      function() {
 
-      document
-        .querySelectorAll("#filters button")
-        .forEach(function(b) {
-          b.classList.remove("on");
-        });
+        document
+          .querySelectorAll("#filters button")
+          .forEach(function(b) {
 
-      button.classList.add("on");
+            b.classList.remove("on");
 
-      category =
-        button.dataset.c;
+          });
 
-      render();
-    };
+
+        button.classList.add("on");
+
+        category =
+          button.dataset.c;
+
+        render();
+      };
 
   });
 
@@ -264,217 +310,74 @@ document
 ========================= */
 
 if (search) {
-  search.oninput = render;
+
+  search.oninput =
+    function() {
+
+      render();
+
+    };
+
 }
 
 
 /* =========================
-   FEATURED STORY
+   STORY READER
 ========================= */
 
-function renderFeatured() {
-
-  const box =
-    document.getElementById("featuredBox");
-
-  if (!box || !stories.length)
-    return;
-
-
-  const story = stories[0];
-
-  const image =
-    story.image_url
-      ? `
-        <img
-          src="${escapeHTML(story.image_url)}"
-          alt="${escapeHTML(story.title)}"
-        >
-      `
-      : `
-        <div class="featured-placeholder">
-          ❤️
-        </div>
-      `;
-
-
-  box.innerHTML = `
-
-    <div
-      class="featured-card"
-      onclick="openReader('${story.id}')"
-    >
-
-      ${image}
-
-      <div class="featured-content">
-
-        <small>
-          ${escapeHTML(story.category)}
-        </small>
-
-        <h3>
-          ${escapeHTML(story.title)}
-        </h3>
-
-        <p>
-          ${escapeHTML(story.body)}
-        </p>
-
-        <span class="read">
-          Read Story →
-        </span>
-
-      </div>
-
-    </div>
-
-  `;
-}
-
-
-/* =========================
-   TRENDING
-========================= */
-
-async function renderTrending() {
-
-  const container =
-    document.getElementById("trendingGrid");
-
-  if (!container)
-    return;
-
-
-  const counts = {};
-
-  const { data } =
-    await supabaseClient
-      .from("story_views")
-      .select("story_id");
-
-
-  (data || []).forEach(function(row) {
-
-    counts[row.story_id] =
-      (counts[row.story_id] || 0) + 1;
-
-  });
-
-
-  const trending =
-    [...stories]
-      .sort(function(a,b) {
-
-        return (
-          (counts[b.id] || 0) -
-          (counts[a.id] || 0)
-        );
-
-      })
-      .slice(0,3);
-
-
-  container.innerHTML =
-    trending.length
-
-      ? trending.map(function(story) {
-
-          const image =
-            story.image_url
-              ? `
-                <img
-                  src="${escapeHTML(story.image_url)}"
-                  alt=""
-                >
-              `
-              : "";
-
-
-          return `
-
-            <article
-              class="mini-card"
-              onclick="openReader('${story.id}')"
-            >
-
-              ${image}
-
-              <div class="mini-content">
-
-                <small>
-                  ${escapeHTML(story.category)}
-                </small>
-
-                <h3>
-                  ${escapeHTML(story.title)}
-                </h3>
-
-                <span>
-                  👀 ${counts[story.id] || 0} reads
-                </span>
-
-              </div>
-
-            </article>
-
-          `;
-
-        }).join("")
-
-      : "<p>No stories yet.</p>";
-}
-
-
-/* =========================
-   OPEN READER
-========================= */
-
-async function openReader(id) {
+function openReader(id) {
 
   const story =
     stories.find(function(s) {
-      return String(s.id) === String(id);
+
+      return String(s.id) ===
+        String(id);
+
     });
 
 
-  if (!story)
-    return;
+  if (!story) return;
 
 
-  currentStory = story;
+  document.getElementById("rc")
+    .textContent =
+      story.category || "";
 
 
-  document.getElementById("rc").textContent =
-    story.category || "Story";
+  document.getElementById("rt")
+    .textContent =
+      story.title || "";
 
 
-  document.getElementById("rt").textContent =
-    story.title || "";
+  document.getElementById("rb")
+    .textContent =
+      story.body || "";
 
 
-  document.getElementById("rb").textContent =
-    story.body || "";
+  const imageWrap =
+    document.getElementById(
+      "readerImageWrap"
+    );
 
-
-  const readerImage =
-    document.getElementById("readerImage");
+  const image =
+    document.getElementById(
+      "readerImage"
+    );
 
 
   if (story.image_url) {
 
-    readerImage.src =
+    image.src =
       story.image_url;
 
-    readerImage.style.display =
-      "block";
+    imageWrap.classList.add("show");
 
   } else {
 
-    readerImage.removeAttribute("src");
+    image.src = "";
 
-    readerImage.style.display =
-      "none";
+    imageWrap.classList.remove("show");
+
   }
 
 
@@ -483,23 +386,10 @@ async function openReader(id) {
     .classList.add("show");
 
 
-  currentFontSize = 16;
-
-  document.getElementById("rb").style.fontSize =
-    currentFontSize + "px";
-
-
-  await addView(story.id);
-
-  await updateLikeCount(story.id);
-
-  await loadComments(story.id);
+  document.body.style.overflow =
+    "hidden";
 }
 
-
-/* =========================
-   CLOSE READER
-========================= */
 
 function closeReader() {
 
@@ -507,589 +397,38 @@ function closeReader() {
     .getElementById("reader")
     .classList.remove("show");
 
-  currentStory = null;
+
+  document.body.style.overflow =
+    "";
 }
 
 
-document.addEventListener(
-  "keydown",
-  function(e) {
-
-    if (e.key === "Escape") {
-      closeReader();
-    }
-
-  }
-);
-
-
 /* =========================
-   VIEWS
+   SURPRISE ME
 ========================= */
 
-async function addView(storyId) {
+function surpriseMe() {
 
-  const viewedKey =
-    "viewed_" + storyId;
+  if (!stories.length) {
 
-
-  if (sessionStorage.getItem(viewedKey))
-    return;
-
-
-  const { error } =
-    await supabaseClient
-      .from("story_views")
-      .insert({
-        story_id: storyId
-      });
-
-
-  if (!error) {
-
-    sessionStorage.setItem(
-      viewedKey,
-      "1"
+    alert(
+      "Abhi koi story available nahi hai."
     );
 
-    updateStats();
-
-    renderTrending();
-  }
-}
-
-
-/* =========================
-   LIKE
-========================= */
-
-const likeBtn =
-  document.getElementById("likeBtn");
-
-
-if (likeBtn) {
-
-  likeBtn.onclick =
-    async function() {
-
-      if (!currentStory)
-        return;
-
-
-      const key =
-        "liked_" + currentStory.id;
-
-
-      if (localStorage.getItem(key)) {
-
-        alert("You already liked this story ❤️");
-
-        return;
-      }
-
-
-      const { error } =
-        await supabaseClient
-          .from("story_likes")
-          .insert({
-            story_id: currentStory.id
-          });
-
-
-      if (error) {
-
-        console.error(error);
-
-        alert("Like nahi ho paaya.");
-
-        return;
-      }
-
-
-      localStorage.setItem(
-        key,
-        "1"
-      );
-
-
-      await updateLikeCount(
-        currentStory.id
-      );
-
-      updateStats();
-    };
-}
-
-
-/* =========================
-   LIKE COUNT
-========================= */
-
-async function updateLikeCount(storyId) {
-
-  const { count } =
-    await supabaseClient
-      .from("story_likes")
-      .select("*", {
-        count:"exact",
-        head:true
-      })
-      .eq("story_id", storyId);
-
-
-  const element =
-    document.getElementById("readerLikes");
-
-
-  if (element) {
-
-    element.textContent =
-      count || 0;
-  }
-}
-
-
-/* =========================
-   BOOKMARK
-========================= */
-
-const bookmarkBtn =
-  document.getElementById("bookmarkBtn");
-
-
-if (bookmarkBtn) {
-
-  bookmarkBtn.onclick =
-    async function() {
-
-      if (!currentStory)
-        return;
-
-
-      const key =
-        "bookmark_" + currentStory.id;
-
-
-      if (localStorage.getItem(key)) {
-
-        alert("Already bookmarked 🔖");
-
-        return;
-      }
-
-
-      const { error } =
-        await supabaseClient
-          .from("story_bookmarks")
-          .insert({
-            story_id: currentStory.id
-          });
-
-
-      if (error) {
-
-        console.error(error);
-
-        alert("Bookmark nahi ho paaya.");
-
-        return;
-      }
-
-
-      localStorage.setItem(
-        key,
-        "1"
-      );
-
-
-      bookmarkBtn.textContent =
-        "🔖 Bookmarked";
-
-    };
-}
-
-
-/* =========================
-   SHARE
-========================= */
-
-const shareBtn =
-  document.getElementById("shareBtn");
-
-
-if (shareBtn) {
-
-  shareBtn.onclick =
-    async function() {
-
-      if (!currentStory)
-        return;
-
-
-      const shareData = {
-
-        title:
-          currentStory.title,
-
-        text:
-          "Read this story on AkashRuru Stories ❤️",
-
-        url:
-          window.location.href
-
-      };
-
-
-      try {
-
-        if (navigator.share) {
-
-          await navigator.share(
-            shareData
-          );
-
-        } else {
-
-          await navigator.clipboard
-            .writeText(
-              window.location.href
-            );
-
-          alert(
-            "Story link copied! ❤️"
-          );
-        }
-
-      } catch(error) {
-
-        console.log(error);
-
-      }
-
-    };
-}
-
-
-/* =========================
-   COMMENTS
-========================= */
-
-const commentBtn =
-  document.getElementById("commentBtn");
-
-
-if (commentBtn) {
-
-  commentBtn.onclick =
-    async function() {
-
-      if (!currentStory)
-        return;
-
-
-      const name =
-        document
-          .getElementById("commentName")
-          .value
-          .trim();
-
-
-      const comment =
-        document
-          .getElementById("commentText")
-          .value
-          .trim();
-
-
-      if (!comment) {
-
-        alert(
-          "Comment likho pehle."
-        );
-
-        return;
-      }
-
-
-      if (comment.length > 1000) {
-
-        alert(
-          "Comment bahut bada hai."
-        );
-
-        return;
-      }
-
-
-      const { error } =
-        await supabaseClient
-          .from("story_comments")
-          .insert({
-
-            story_id:
-              currentStory.id,
-
-            name:
-              name || "Anonymous",
-
-            comment:
-              comment
-
-          });
-
-
-      if (error) {
-
-        console.error(error);
-
-        alert(
-          "Comment post nahi hua."
-        );
-
-        return;
-      }
-
-
-      document
-        .getElementById("commentName")
-        .value = "";
-
-
-      document
-        .getElementById("commentText")
-        .value = "";
-
-
-      loadComments(
-        currentStory.id
-      );
-
-    };
-}
-
-
-/* =========================
-   LOAD COMMENTS
-========================= */
-
-async function loadComments(storyId) {
-
-  const list =
-    document.getElementById(
-      "commentsList"
-    );
-
-
-  if (!list)
-    return;
-
-
-  list.innerHTML =
-    "<p>Loading comments...</p>";
-
-
-  const { data, error } =
-    await supabaseClient
-      .from("story_comments")
-      .select("*")
-      .eq("story_id", storyId)
-      .order(
-        "created_at",
-        {
-          ascending:false
-        }
-      );
-
-
-  if (error) {
-
-    list.innerHTML =
-      "<p>Comments load nahi hue.</p>";
-
     return;
   }
 
 
-  if (!data.length) {
-
-    list.innerHTML =
-      "<p>No comments yet. Be the first ❤️</p>";
-
-    return;
-  }
-
-
-  list.innerHTML =
-    data.map(function(item) {
-
-      return `
-
-        <div class="comment">
-
-          <strong>
-            ${escapeHTML(item.name)}
-          </strong>
-
-          <p>
-            ${escapeHTML(item.comment)}
-          </p>
-
-        </div>
-
-      `;
-
-    }).join("");
-}
-
-
-/* =========================
-   FONT SIZE
-========================= */
-
-const fontMinus =
-  document.getElementById("fontMinus");
-
-const fontPlus =
-  document.getElementById("fontPlus");
-
-
-if (fontMinus) {
-
-  fontMinus.onclick =
-    function() {
-
-      currentFontSize =
-        Math.max(
-          12,
-          currentFontSize - 2
-        );
-
-
-      document.getElementById("rb")
-        .style.fontSize =
-        currentFontSize + "px";
-
-    };
-}
-
-
-if (fontPlus) {
-
-  fontPlus.onclick =
-    function() {
-
-      currentFontSize =
-        Math.min(
-          26,
-          currentFontSize + 2
-        );
-
-
-      document.getElementById("rb")
-        .style.fontSize =
-        currentFontSize + "px";
-
-    };
-}
-
-
-/* =========================
-   READING PROGRESS
-========================= */
-
-const readerBox =
-  document.querySelector(
-    ".reader-box"
-  );
-
-
-if (readerBox) {
-
-  readerBox.addEventListener(
-    "scroll",
-    function() {
-
-      const progress =
-        document.getElementById(
-          "readerProgress"
-        );
-
-
-      const scrollTop =
-        readerBox.scrollTop;
-
-
-      const scrollHeight =
-        readerBox.scrollHeight -
-        readerBox.clientHeight;
-
-
-      const percent =
-        scrollHeight > 0
-          ? (scrollTop / scrollHeight) * 100
-          : 0;
-
-
-      progress.style.width =
-        percent + "%";
-
-    }
-  );
-}
-
-
-/* =========================
-   RANDOM STORY
-========================= */
-
-const randomBtn =
-  document.getElementById("randomBtn");
-
-
-if (randomBtn) {
-
-  randomBtn.onclick =
-    function() {
-
-      if (!stories.length)
-        return;
-
-
-      const random =
-        stories[
-          Math.floor(
-            Math.random() *
-            stories.length
-          )
-        ];
-
-
-      openReader(random.id);
-
-    };
-}
-
-
-/* =========================
-   SUBMIT STORY
-========================= */
-
-const submitStoryBtn =
-  document.getElementById(
-    "submitStoryBtn"
-  );
-
-
-if (submitStoryBtn) {
-
-  submitStoryBtn.onclick =
-    function() {
-
-      alert(
-        "Apni story submit karne ke liye Admin se contact karein. ❤️"
-      );
-
-    };
+  const random =
+    stories[
+      Math.floor(
+        Math.random() *
+        stories.length
+      )
+    ];
+
+
+  openReader(random.id);
 }
 
 
@@ -1097,174 +436,283 @@ if (submitStoryBtn) {
    MUSIC
 ========================= */
 
-let audioContext = null;
-let musicPlaying = false;
-let musicTimer = null;
+function setMood(mood) {
+
+  currentMood = mood;
+
+  currentTrack = 0;
 
 
-const musicBtn =
-  document.getElementById(
-    "musicBtn"
-  );
+  document
+    .querySelectorAll(".mood")
+    .forEach(function(button) {
 
-
-function createMusic() {
-
-  audioContext =
-    new (
-      window.AudioContext ||
-      window.webkitAudioContext
-    )();
-
-
-  const master =
-    audioContext.createGain();
-
-
-  master.gain.value =
-    0.035;
-
-
-  master.connect(
-    audioContext.destination
-  );
-
-
-  const notes = [
-
-    261.63,
-    329.63,
-    392.00,
-    329.63,
-
-    293.66,
-    349.23,
-    440.00,
-    349.23
-
-  ];
-
-
-  let index = 0;
-
-
-  function playNote() {
-
-    if (!musicPlaying)
-      return;
-
-
-    const oscillator =
-      audioContext.createOscillator();
-
-
-    const gain =
-      audioContext.createGain();
-
-
-    oscillator.type =
-      "sine";
-
-
-    oscillator.frequency.value =
-      notes[
-        index %
-        notes.length
-      ];
-
-
-    gain.gain.setValueAtTime(
-      0,
-      audioContext.currentTime
-    );
-
-
-    gain.gain.linearRampToValueAtTime(
-      0.6,
-      audioContext.currentTime + 0.5
-    );
-
-
-    gain.gain.linearRampToValueAtTime(
-      0,
-      audioContext.currentTime + 2.5
-    );
-
-
-    oscillator.connect(gain);
-
-    gain.connect(master);
-
-
-    oscillator.start();
-
-
-    oscillator.stop(
-      audioContext.currentTime + 2.6
-    );
-
-
-    index++;
-
-
-    musicTimer =
-      setTimeout(
-        playNote,
-        900
+      button.classList.toggle(
+        "active",
+        button.dataset.mood === mood
       );
-  }
+
+    });
 
 
-  playNote();
+  loadMusic();
+
 }
 
 
-if (musicBtn) {
+function loadMusic() {
 
-  musicBtn.onclick =
+  const tracks =
+    musicTracks[currentMood] || [];
+
+
+  if (!tracks.length) return;
+
+
+  const track =
+    tracks[currentTrack];
+
+
+  const name =
+    document.getElementById(
+      "trackName"
+    );
+
+
+  if (name) {
+
+    name.textContent =
+      track.name;
+
+  }
+
+
+  if (audio) {
+
+    audio.src =
+      track.url;
+
+    audio.load();
+
+  }
+
+}
+
+
+function playMusic() {
+
+  if (!audio || !audio.src) {
+
+    alert(
+      "Music file abhi add nahi ki gayi hai."
+    );
+
+    return;
+  }
+
+
+  if (audio.paused) {
+
+    audio.play();
+
+    document.getElementById(
+      "playMusic"
+    ).textContent =
+      "⏸";
+
+  } else {
+
+    audio.pause();
+
+    document.getElementById(
+      "playMusic"
+    ).textContent =
+      "▶";
+
+  }
+
+}
+
+
+function nextMusic() {
+
+  const tracks =
+    musicTracks[currentMood];
+
+
+  if (!tracks.length) return;
+
+
+  currentTrack =
+    (currentTrack + 1) %
+    tracks.length;
+
+
+  loadMusic();
+
+}
+
+
+function previousMusic() {
+
+  const tracks =
+    musicTracks[currentMood];
+
+
+  if (!tracks.length) return;
+
+
+  currentTrack =
+    (currentTrack - 1 + tracks.length) %
+    tracks.length;
+
+
+  loadMusic();
+
+}
+
+
+/* MUSIC MOODS */
+
+document
+  .querySelectorAll(".mood")
+  .forEach(function(button) {
+
+    button.onclick =
+      function() {
+
+        setMood(
+          button.dataset.mood
+        );
+
+      };
+
+  });
+
+
+const playButton =
+  document.getElementById(
+    "playMusic"
+  );
+
+
+if (playButton) {
+
+  playButton.onclick =
+    playMusic;
+
+}
+
+
+const nextButton =
+  document.getElementById(
+    "nextMusic"
+  );
+
+
+if (nextButton) {
+
+  nextButton.onclick =
+    nextMusic;
+
+}
+
+
+const previousButton =
+  document.getElementById(
+    "prevMusic"
+  );
+
+
+if (previousButton) {
+
+  previousButton.onclick =
+    previousMusic;
+
+}
+
+
+/* =========================
+   AUDIO PROGRESS
+========================= */
+
+if (audio) {
+
+  audio.addEventListener(
+    "timeupdate",
     function() {
 
-      if (!musicPlaying) {
-
-        musicPlaying = true;
-
-
-        if (!audioContext) {
-
-          createMusic();
-
-        }
+      if (!audio.duration)
+        return;
 
 
-        if (
-          audioContext.state ===
-          "suspended"
-        ) {
-
-          audioContext.resume();
-
-        }
+      const percent =
+        (
+          audio.currentTime /
+          audio.duration
+        ) * 100;
 
 
-        musicBtn.textContent =
-          "⏸ Pause Music";
-
-      } else {
-
-        musicPlaying = false;
-
-
-        clearTimeout(
-          musicTimer
+      const bar =
+        document.getElementById(
+          "progressBar"
         );
 
 
-        musicBtn.textContent =
-          "🎵 Play Music";
+      if (bar) {
+
+        bar.style.width =
+          percent + "%";
 
       }
 
+    }
+  );
+
+
+  audio.addEventListener(
+    "ended",
+    function() {
+
+      nextMusic();
+
+      if (audio.src) {
+
+        audio.play().catch(
+          function() {}
+        );
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   MOBILE MENU
+========================= */
+
+const menuBtn =
+  document.getElementById(
+    "menuBtn"
+  );
+
+
+if (menuBtn) {
+
+  menuBtn.onclick =
+    function() {
+
+      document
+        .querySelector(".nav-links")
+        .classList.toggle(
+          "open"
+        );
+
     };
+
 }
 
 
@@ -1287,7 +735,29 @@ if (year) {
 
 
 /* =========================
+   READER ESCAPE
+========================= */
+
+document.addEventListener(
+  "keydown",
+  function(e) {
+
+    if (
+      e.key === "Escape"
+    ) {
+
+      closeReader();
+
+    }
+
+  }
+);
+
+
+/* =========================
    START
 ========================= */
 
 loadStories();
+
+setMood("romantic");

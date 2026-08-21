@@ -12,6 +12,7 @@ body {
   color: #f8edf5;
   font-family: Georgia, "Times New Roman", serif;
   overflow-x: hidden;
+  transition: background .7s ease, color .7s ease;
 }
 
 body::before {
@@ -23,11 +24,17 @@ body::before {
     radial-gradient(circle at 20% 10%, rgba(255, 76, 166, .12), transparent 28%),
     radial-gradient(circle at 85% 40%, rgba(121, 65, 255, .09), transparent 30%);
   z-index: -2;
+  transition: opacity .7s ease;
 }
 
 a {
   color: inherit;
   text-decoration: none;
+}
+
+button,
+input {
+  font-family: inherit;
 }
 
 /* ================= LOADER ================= */
@@ -74,6 +81,41 @@ a {
   color: #a99ba7;
   font: 10px Arial, sans-serif;
   letter-spacing: 4px;
+}
+
+/* ================= ATMOSPHERE ================= */
+
+#atmosphere {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: -3;
+  opacity: 0;
+  transition: opacity 1s ease, background 1s ease;
+}
+
+body.mood-romantic #atmosphere {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(255, 55, 145, .12), transparent 35%);
+}
+
+body.mood-sad #atmosphere {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 70% 20%, rgba(60, 100, 180, .14), transparent 35%);
+}
+
+body.mood-horror #atmosphere {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 50% 50%, rgba(130, 0, 0, .14), transparent 40%);
+}
+
+body.mood-calm #atmosphere {
+  opacity: 1;
+  background:
+    radial-gradient(circle at 50% 20%, rgba(80, 100, 180, .1), transparent 40%);
 }
 
 /* ================= PARTICLES ================= */
@@ -191,6 +233,19 @@ header {
       #0d0912 65%,
       #08070b 100%
     );
+  transition: background 1s ease;
+}
+
+body.mood-horror header {
+  background:
+    radial-gradient(circle at 20% 25%, rgba(110, 0, 0, .45), transparent 35%),
+    linear-gradient(180deg, #120609, #090608 70%, #08070b);
+}
+
+body.mood-sad header {
+  background:
+    radial-gradient(circle at 20% 20%, rgba(30, 65, 120, .45), transparent 35%),
+    linear-gradient(180deg, #0d1422, #080b12 70%, #08070b);
 }
 
 header::after {
@@ -263,6 +318,7 @@ nav {
   border: 0;
   color: white;
   font-size: 25px;
+  cursor: pointer;
 }
 
 /* ================= HERO ================= */
@@ -441,6 +497,7 @@ section {
     );
   border: 1px solid #382936;
   transition: .4s;
+  cursor: pointer;
 }
 
 .featured-card:hover {
@@ -507,7 +564,7 @@ section {
 .search-wrap {
   max-width: 500px;
   position: relative;
-  margin-bottom: 35px;
+  margin-bottom: 25px;
 }
 
 .search-wrap span {
@@ -532,6 +589,52 @@ section {
 .search:focus {
   border-color: #ff79b7;
   box-shadow: 0 0 25px rgba(255,121,183,.08);
+}
+
+/* ================= CONTINUE ================= */
+
+.continue-card {
+  margin: 0 0 30px;
+  padding: 22px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255,121,183,.1),
+      rgba(255,255,255,.025)
+    );
+  border: 1px solid #493244;
+  animation: cardAppear .5s ease both;
+}
+
+.continue-card small {
+  color: #ff91c7;
+  font: 700 9px Arial, sans-serif;
+  letter-spacing: 2px;
+}
+
+.continue-card h3 {
+  margin: 7px 0 12px;
+}
+
+.continue-progress {
+  width: min(420px, 60vw);
+  height: 4px;
+  background: #342633;
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.continue-progress span {
+  display: block;
+  width: 0;
+  height: 100%;
+  background: #ff79b7;
+  transition: width .5s ease;
 }
 
 /* ================= STORY GRID ================= */
@@ -770,8 +873,8 @@ section {
   position: fixed;
   inset: 0;
   padding: 20px;
-  background: rgba(0,0,0,.82);
-  backdrop-filter: blur(12px);
+  background: rgba(0,0,0,.88);
+  backdrop-filter: blur(18px);
   align-items: center;
   justify-content: center;
   z-index: 500;
@@ -784,28 +887,70 @@ section {
 
 .reader-box {
   width: min(850px, 95vw);
-  max-height: 90vh;
+  max-height: 92vh;
   overflow: auto;
   border-radius: 25px;
   background: #151018;
   border: 1px solid #54384d;
-  box-shadow: 0 30px 100px rgba(0,0,0,.6);
+  box-shadow: 0 30px 100px rgba(0,0,0,.7);
   position: relative;
+  scroll-behavior: smooth;
+}
+
+.reader-box::-webkit-scrollbar {
+  width: 5px;
+}
+
+.reader-box::-webkit-scrollbar-thumb {
+  background: #54384d;
+  border-radius: 10px;
 }
 
 .close-reader {
   position: absolute;
   right: 15px;
   top: 10px;
-  z-index: 5;
+  z-index: 10;
   width: 40px;
   height: 40px;
   border-radius: 50%;
   border: 1px solid #59404f;
-  background: rgba(0,0,0,.45);
+  background: rgba(0,0,0,.55);
   color: white;
   font-size: 28px;
   cursor: pointer;
+  transition: .3s;
+}
+
+.close-reader:hover {
+  transform: rotate(90deg);
+  background: #ff79b7;
+  color: #250b19;
+}
+
+.reader-topbar {
+  position: absolute;
+  right: 65px;
+  top: 10px;
+  z-index: 10;
+  display: flex;
+  gap: 8px;
+}
+
+.reader-tool {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 1px solid #59404f;
+  background: rgba(0,0,0,.55);
+  color: white;
+  cursor: pointer;
+  transition: .3s;
+}
+
+.reader-tool:hover {
+  background: rgba(255,121,183,.2);
+  border-color: #ff79b7;
 }
 
 .reader-image-wrap {
@@ -823,6 +968,27 @@ section {
   width: 100%;
   max-height: 350px;
   object-fit: cover;
+  display: block;
+}
+
+.reader-progress {
+  position: sticky;
+  top: 0;
+  height: 3px;
+  z-index: 8;
+  background: #30232f;
+}
+
+.reader-progress span {
+  display: block;
+  height: 100%;
+  width: 0;
+  background: linear-gradient(
+    90deg,
+    #ff79b7,
+    #ffb4d7
+  );
+  transition: width .1s linear;
 }
 
 .reader-content {
@@ -837,7 +1003,16 @@ section {
 
 .reader-content h2 {
   font-size: 42px;
-  margin: 10px 0 25px;
+  margin: 10px 0 15px;
+}
+
+.reader-meta {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  color: #897b86;
+  font: 10px Arial, sans-serif;
+  margin-bottom: 25px;
 }
 
 .reader-content p {
@@ -846,16 +1021,76 @@ section {
   font: 16px/1.95 Arial, sans-serif;
 }
 
-.reading-line {
-  height: 2px;
-  background: #332632;
+.story-reactions {
+  margin-top: 50px;
+  padding-top: 30px;
+  border-top: 1px solid #2f232f;
 }
 
-.reading-line span {
-  display: block;
-  height: 100%;
-  width: 0%;
-  background: #ff79b7;
+.story-reactions > small {
+  color: #897b86;
+  letter-spacing: 2px;
+}
+
+.reaction-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 15px;
+}
+
+.reaction-buttons button {
+  min-width: 65px;
+  padding: 10px 14px;
+  border-radius: 18px;
+  border: 1px solid #443342;
+  background: #120e15;
+  color: white;
+  cursor: pointer;
+  transition: .25s;
+}
+
+.reaction-buttons button:hover,
+.reaction-buttons button.active {
+  transform: translateY(-3px);
+  border-color: #ff79b7;
+  background: rgba(255,121,183,.12);
+}
+
+.reaction-buttons span {
+  margin-left: 5px;
+  color: #aaa;
+  font: 11px Arial, sans-serif;
+}
+
+.reader-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-top: 35px;
+  padding-top: 25px;
+  border-top: 1px solid #2f232f;
+}
+
+/* ================= FULLSCREEN READER ================= */
+
+.reader.fullscreen {
+  padding: 0;
+}
+
+.reader.fullscreen .reader-box {
+  width: 100%;
+  height: 100vh;
+  max-height: 100vh;
+  border-radius: 0;
+  border: 0;
+}
+
+.reader.fullscreen .reader-content {
+  max-width: 850px;
+  margin: auto;
+  padding: 70px 30px;
 }
 
 /* ================= FOOTER ================= */
@@ -966,10 +1201,24 @@ footer {
 @keyframes fadeIn {
   from {
     opacity: 0;
+    transform: scale(.98);
   }
 
   to {
     opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes cardAppear {
+  from {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -1056,12 +1305,47 @@ footer {
     font-size: 35px;
   }
 
+  .reader {
+    padding: 0;
+  }
+
+  .reader-box {
+    width: 100%;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    border: 0;
+  }
+
   .reader-content {
     padding: 30px 22px;
   }
 
   .reader-content h2 {
     font-size: 34px;
+  }
+
+  .reader-content p {
+    font-size: 15px;
+    line-height: 1.9;
+  }
+
+  .continue-card {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .continue-progress {
+    width: 100%;
+  }
+
+  .reader-actions {
+    flex-direction: column;
+  }
+
+  .reader-actions .btn {
+    width: 100%;
+    text-align: center;
   }
 
 }
@@ -1087,6 +1371,16 @@ footer {
 
   .hero-stats strong {
     font-size: 21px;
+  }
+
+  .reader-topbar {
+    right: 60px;
+  }
+
+  .reader-tool,
+  .close-reader {
+    width: 36px;
+    height: 36px;
   }
 
 }

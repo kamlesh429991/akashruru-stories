@@ -14,6 +14,10 @@ const search = document.getElementById("search");
 const audio = document.getElementById("audio");
 
 
+/* =========================
+   HELPER
+========================= */
+
 function escapeHTML(text) {
   return String(text || "").replace(/[&<>"']/g, function (m) {
     return {
@@ -41,6 +45,7 @@ async function loadStories() {
     });
 
   if (error) {
+
     console.error(error);
 
     if (grid) {
@@ -69,41 +74,53 @@ function updateStoryCount() {
     document.getElementById("storyCount");
 
   if (counter) {
-    counter.textContent = stories.length;
+    counter.textContent =
+      stories.length;
   }
 }
 
 
 /* =========================
-   STORIES
+   STORY CARDS
 ========================= */
 
 function render() {
 
   if (!grid) return;
 
-  const query = search
-    ? search.value.toLowerCase().trim()
-    : "";
+  const query =
+    search
+      ? search.value.toLowerCase().trim()
+      : "";
 
-  const filtered = stories.filter(function (story) {
 
-    const title =
-      String(story.title || "").toLowerCase();
+  const filtered =
+    stories.filter(function (story) {
 
-    const body =
-      String(story.body || "").toLowerCase();
+      const title =
+        String(
+          story.title || ""
+        ).toLowerCase();
 
-    return (
-      (category === "All" ||
-        story.category === category) &&
-      (
-        !query ||
-        title.includes(query) ||
-        body.includes(query)
-      )
-    );
-  });
+      const body =
+        String(
+          story.body || ""
+        ).toLowerCase();
+
+
+      return (
+        (
+          category === "All" ||
+          story.category === category
+        ) &&
+        (
+          !query ||
+          title.includes(query) ||
+          body.includes(query)
+        )
+      );
+
+    });
 
 
   if (!filtered.length) {
@@ -177,7 +194,9 @@ function render() {
 function renderFeatured() {
 
   const box =
-    document.getElementById("featuredGrid");
+    document.getElementById(
+      "featuredGrid"
+    );
 
   if (!box) return;
 
@@ -239,10 +258,15 @@ document
       function () {
 
         document
-          .querySelectorAll("#filters button")
+          .querySelectorAll(
+            "#filters button"
+          )
           .forEach(function (b) {
+
             b.classList.remove("on");
+
           });
+
 
         button.classList.add("on");
 
@@ -250,6 +274,7 @@ document
           button.dataset.c;
 
         render();
+
       }
     );
 
@@ -265,7 +290,9 @@ if (search) {
   search.addEventListener(
     "input",
     function () {
+
       render();
+
     }
   );
 
@@ -280,7 +307,10 @@ function openReader(id) {
 
   const story =
     stories.find(function (s) {
-      return String(s.id) === String(id);
+
+      return String(s.id) ===
+        String(id);
+
     });
 
 
@@ -302,10 +332,12 @@ function openReader(id) {
       story.category || "";
   }
 
+
   if (rt) {
     rt.textContent =
       story.title || "";
   }
+
 
   if (rb) {
     rb.textContent =
@@ -367,9 +399,11 @@ function closeReader() {
   const reader =
     document.getElementById("reader");
 
+
   if (reader) {
     reader.classList.remove("show");
   }
+
 
   document.body.style.overflow =
     "";
@@ -394,7 +428,8 @@ function surpriseMe() {
 
   const randomIndex =
     Math.floor(
-      Math.random() * stories.length
+      Math.random() *
+      stories.length
     );
 
 
@@ -402,7 +437,9 @@ function surpriseMe() {
     stories[randomIndex];
 
 
-  openReader(randomStory.id);
+  openReader(
+    randomStory.id
+  );
 }
 
 
@@ -415,7 +452,8 @@ const musicTracks = {
   romantic: [
     {
       name: "Romantic Piano",
-      url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
+      url:
+        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
     }
   ],
 
@@ -446,7 +484,8 @@ const musicTracks = {
 let currentMood =
   "romantic";
 
-let currentTrack = 0;
+let currentTrack =
+  0;
 
 
 /* =========================
@@ -485,10 +524,13 @@ function setMood(mood) {
 function loadMusic() {
 
   const tracks =
-    musicTracks[currentMood] || [];
+    musicTracks[currentMood] ||
+    [];
 
 
-  if (!tracks.length) return;
+  if (!tracks.length) {
+    return;
+  }
 
 
   const track =
@@ -502,8 +544,10 @@ function loadMusic() {
 
 
   if (name) {
+
     name.textContent =
       track.name;
+
   }
 
 
@@ -515,6 +559,7 @@ function loadMusic() {
       track.url || "";
 
     audio.load();
+
   }
 
 
@@ -525,19 +570,73 @@ function loadMusic() {
 
 
   if (play) {
+
     play.textContent =
       "▶";
+
   }
 }
 
 
 /* =========================
-   PLAY / PAUSE
+   PLAY MUSIC
 ========================= */
 
 function playMusic() {
 
-  if (!audio || !audio.src) {
+  const player =
+    document.getElementById(
+      "audio"
+    );
+
+  const button =
+    document.getElementById(
+      "playMusic"
+    );
+
+
+  const romanticURL =
+    "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3";
+
+
+  if (!player) {
+
+    alert(
+      "Audio player nahi mila."
+    );
+
+    return;
+  }
+
+
+  /*
+    Romantic mood ke liye
+    direct URL use hoga.
+  */
+
+  if (
+    currentMood ===
+    "romantic"
+  ) {
+
+    if (
+      !player.src ||
+      !player.src.includes(
+        "solarflex-romantic-495654.mp3"
+      )
+    ) {
+
+      player.src =
+        romanticURL;
+
+      player.load();
+
+    }
+
+  }
+
+
+  if (!player.src) {
 
     alert(
       "Is mood ka music abhi upload nahi hua hai."
@@ -547,52 +646,50 @@ function playMusic() {
   }
 
 
-  if (audio.paused) {
+  if (player.paused) {
 
-    audio.play()
+    player.play()
       .then(function () {
 
-        const button =
-          document.getElementById(
-            "playMusic"
-          );
-
         if (button) {
+
           button.textContent =
             "⏸";
+
         }
 
       })
       .catch(function (error) {
 
         console.error(
-          "Audio error:",
+          "Audio play error:",
           error
+        );
+
+        alert(
+          "Music play nahi hua."
         );
 
       });
 
   } else {
 
-    audio.pause();
-
-
-    const button =
-      document.getElementById(
-        "playMusic"
-      );
+    player.pause();
 
 
     if (button) {
+
       button.textContent =
         "▶";
+
     }
+
   }
 }
 
 
 /* =========================
-   NEXT
+   NEXT MUSIC
 ========================= */
 
 function nextMusic() {
@@ -601,15 +698,20 @@ function nextMusic() {
     musicTracks[currentMood];
 
 
-  if (!tracks ||
-      !tracks.length) {
+  if (
+    !tracks ||
+    !tracks.length
+  ) {
+
     return;
+
   }
 
 
   currentTrack =
-    (currentTrack + 1) %
-    tracks.length;
+    (
+      currentTrack + 1
+    ) % tracks.length;
 
 
   loadMusic();
@@ -617,7 +719,7 @@ function nextMusic() {
 
 
 /* =========================
-   PREVIOUS
+   PREVIOUS MUSIC
 ========================= */
 
 function previousMusic() {
@@ -626,9 +728,13 @@ function previousMusic() {
     musicTracks[currentMood];
 
 
-  if (!tracks ||
-      !tracks.length) {
+  if (
+    !tracks ||
+    !tracks.length
+  ) {
+
     return;
+
   }
 
 
@@ -637,8 +743,7 @@ function previousMusic() {
       currentTrack -
       1 +
       tracks.length
-    ) %
-    tracks.length;
+    ) % tracks.length;
 
 
   loadMusic();
@@ -646,7 +751,7 @@ function previousMusic() {
 
 
 /* =========================
-   MUSIC BUTTONS
+   MUSIC MOODS
 ========================= */
 
 document
@@ -667,6 +772,10 @@ document
   });
 
 
+/* =========================
+   PLAY BUTTON
+========================= */
+
 const playButton =
   document.getElementById(
     "playMusic"
@@ -677,11 +786,19 @@ if (playButton) {
 
   playButton.addEventListener(
     "click",
-    playMusic
+    function () {
+
+      playMusic();
+
+    }
   );
 
 }
 
+
+/* =========================
+   NEXT BUTTON
+========================= */
 
 const nextButton =
   document.getElementById(
@@ -693,11 +810,19 @@ if (nextButton) {
 
   nextButton.addEventListener(
     "click",
-    nextMusic
+    function () {
+
+      nextMusic();
+
+    }
   );
 
 }
 
+
+/* =========================
+   PREVIOUS BUTTON
+========================= */
 
 const previousButton =
   document.getElementById(
@@ -709,7 +834,11 @@ if (previousButton) {
 
   previousButton.addEventListener(
     "click",
-    previousMusic
+    function () {
+
+      previousMusic();
+
+    }
   );
 
 }
@@ -763,7 +892,9 @@ if (audio) {
       if (audio.src) {
 
         audio.play()
-          .catch(function () {});
+          .catch(
+            function () {}
+          );
 
       }
 
@@ -810,7 +941,7 @@ if (menuBtn) {
 
 
 /* =========================
-   CLOSE READER
+   CLOSE READER OUTSIDE
 ========================= */
 
 const reader =
@@ -840,7 +971,7 @@ if (reader) {
 
 
 /* =========================
-   ESCAPE
+   ESC KEY
 ========================= */
 
 document.addEventListener(
@@ -848,7 +979,8 @@ document.addEventListener(
   function (event) {
 
     if (
-      event.key === "Escape"
+      event.key ===
+      "Escape"
     ) {
 
       closeReader();

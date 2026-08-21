@@ -14,10 +14,6 @@ const search = document.getElementById("search");
 const audio = document.getElementById("audio");
 
 
-/* =========================
-   HELPER
-========================= */
-
 function escapeHTML(text) {
   return String(text || "").replace(/[&<>"']/g, function (m) {
     return {
@@ -46,7 +42,12 @@ async function loadStories() {
 
   if (error) {
     console.error(error);
-    grid.innerHTML = "<p>Stories load nahi ho paayi.</p>";
+
+    if (grid) {
+      grid.innerHTML =
+        "<p>Stories load nahi ho paayi.</p>";
+    }
+
     return;
   }
 
@@ -64,7 +65,8 @@ async function loadStories() {
 
 function updateStoryCount() {
 
-  const counter = document.getElementById("storyCount");
+  const counter =
+    document.getElementById("storyCount");
 
   if (counter) {
     counter.textContent = stories.length;
@@ -73,10 +75,12 @@ function updateStoryCount() {
 
 
 /* =========================
-   STORY CARDS
+   STORIES
 ========================= */
 
 function render() {
+
+  if (!grid) return;
 
   const query = search
     ? search.value.toLowerCase().trim()
@@ -84,11 +88,15 @@ function render() {
 
   const filtered = stories.filter(function (story) {
 
-    const title = String(story.title || "").toLowerCase();
-    const body = String(story.body || "").toLowerCase();
+    const title =
+      String(story.title || "").toLowerCase();
+
+    const body =
+      String(story.body || "").toLowerCase();
 
     return (
-      (category === "All" || story.category === category) &&
+      (category === "All" ||
+        story.category === category) &&
       (
         !query ||
         title.includes(query) ||
@@ -99,56 +107,66 @@ function render() {
 
 
   if (!filtered.length) {
+
     grid.innerHTML = `
       <div class="empty">
         <h3>No stories found</h3>
         <p>Try another category or search.</p>
       </div>
     `;
+
     return;
   }
 
 
-  grid.innerHTML = filtered.map(function (story) {
+  grid.innerHTML =
+    filtered.map(function (story) {
 
-    const image = story.image_url
-      ? `
-        <img
-          src="${escapeHTML(story.image_url)}"
-          alt="${escapeHTML(story.title)}"
-          style="
-            width:100%;
-            height:160px;
-            object-fit:cover;
-            border-radius:14px;
-            margin-bottom:15px;
-          "
-        >
-      `
-      : "";
+      const image =
+        story.image_url
+          ? `
+            <img
+              src="${escapeHTML(story.image_url)}"
+              alt="${escapeHTML(story.title)}"
+              style="
+                width:100%;
+                height:160px;
+                object-fit:cover;
+                border-radius:14px;
+                margin-bottom:15px;
+              "
+            >
+          `
+          : "";
 
 
-    return `
-      <article
-        class="card"
-        onclick="openReader('${story.id}')">
+      return `
+        <article
+          class="card"
+          onclick="openReader('${story.id}')">
 
-        ${image}
+          ${image}
 
-        <small>${escapeHTML(story.category)}</small>
+          <small>
+            ${escapeHTML(story.category)}
+          </small>
 
-        <h3>${escapeHTML(story.title)}</h3>
+          <h3>
+            ${escapeHTML(story.title)}
+          </h3>
 
-        <p>${escapeHTML(story.body)}</p>
+          <p>
+            ${escapeHTML(story.body)}
+          </p>
 
-        <span class="read">
-          Read story →
-        </span>
+          <span class="read">
+            Read story →
+          </span>
 
-      </article>
-    `;
+        </article>
+      `;
 
-  }).join("");
+    }).join("");
 }
 
 
@@ -158,41 +176,53 @@ function render() {
 
 function renderFeatured() {
 
-  const box = document.getElementById("featuredGrid");
+  const box =
+    document.getElementById("featuredGrid");
 
   if (!box) return;
 
 
-  const featured = stories.slice(0, 3);
+  const featured =
+    stories.slice(0, 3);
 
 
   if (!featured.length) {
-    box.innerHTML = "<p>Stories coming soon...</p>";
+
+    box.innerHTML =
+      "<p>Stories coming soon...</p>";
+
     return;
   }
 
 
-  box.innerHTML = featured.map(function (story) {
+  box.innerHTML =
+    featured.map(function (story) {
 
-    return `
-      <article
-        class="featured-card"
-        onclick="openReader('${story.id}')">
+      return `
+        <article
+          class="featured-card"
+          onclick="openReader('${story.id}')">
 
-        <small>${escapeHTML(story.category)}</small>
+          <small>
+            ${escapeHTML(story.category)}
+          </small>
 
-        <h3>${escapeHTML(story.title)}</h3>
+          <h3>
+            ${escapeHTML(story.title)}
+          </h3>
 
-        <p>${escapeHTML(story.body)}</p>
+          <p>
+            ${escapeHTML(story.body)}
+          </p>
 
-        <span class="read">
-          Read story →
-        </span>
+          <span class="read">
+            Read story →
+          </span>
 
-      </article>
-    `;
+        </article>
+      `;
 
-  }).join("");
+    }).join("");
 }
 
 
@@ -204,20 +234,24 @@ document
   .querySelectorAll("#filters button")
   .forEach(function (button) {
 
-    button.addEventListener("click", function () {
+    button.addEventListener(
+      "click",
+      function () {
 
-      document
-        .querySelectorAll("#filters button")
-        .forEach(function (b) {
-          b.classList.remove("on");
-        });
+        document
+          .querySelectorAll("#filters button")
+          .forEach(function (b) {
+            b.classList.remove("on");
+          });
 
-      button.classList.add("on");
+        button.classList.add("on");
 
-      category = button.dataset.c;
+        category =
+          button.dataset.c;
 
-      render();
-    });
+        render();
+      }
+    );
 
   });
 
@@ -228,9 +262,12 @@ document
 
 if (search) {
 
-  search.addEventListener("input", function () {
-    render();
-  });
+  search.addEventListener(
+    "input",
+    function () {
+      render();
+    }
+  );
 
 }
 
@@ -241,61 +278,101 @@ if (search) {
 
 function openReader(id) {
 
-  const story = stories.find(function (s) {
-    return String(s.id) === String(id);
-  });
+  const story =
+    stories.find(function (s) {
+      return String(s.id) === String(id);
+    });
 
 
   if (!story) return;
 
 
-  document.getElementById("rc").textContent =
-    story.category || "";
+  const rc =
+    document.getElementById("rc");
+
+  const rt =
+    document.getElementById("rt");
+
+  const rb =
+    document.getElementById("rb");
 
 
-  document.getElementById("rt").textContent =
-    story.title || "";
+  if (rc) {
+    rc.textContent =
+      story.category || "";
+  }
 
+  if (rt) {
+    rt.textContent =
+      story.title || "";
+  }
 
-  document.getElementById("rb").textContent =
-    story.body || "";
+  if (rb) {
+    rb.textContent =
+      story.body || "";
+  }
 
 
   const imageWrap =
-    document.getElementById("readerImageWrap");
+    document.getElementById(
+      "readerImageWrap"
+    );
 
   const image =
-    document.getElementById("readerImage");
+    document.getElementById(
+      "readerImage"
+    );
 
 
   if (story.image_url) {
 
-    image.src = story.image_url;
-    imageWrap.classList.add("show");
+    if (image) {
+      image.src =
+        story.image_url;
+    }
+
+    if (imageWrap) {
+      imageWrap.classList.add("show");
+    }
 
   } else {
 
-    image.src = "";
-    imageWrap.classList.remove("show");
+    if (image) {
+      image.src = "";
+    }
+
+    if (imageWrap) {
+      imageWrap.classList.remove("show");
+    }
 
   }
 
 
-  document
-    .getElementById("reader")
-    .classList.add("show");
+  const reader =
+    document.getElementById("reader");
 
-  document.body.style.overflow = "hidden";
+
+  if (reader) {
+    reader.classList.add("show");
+  }
+
+
+  document.body.style.overflow =
+    "hidden";
 }
 
 
 function closeReader() {
 
-  document
-    .getElementById("reader")
-    .classList.remove("show");
+  const reader =
+    document.getElementById("reader");
 
-  document.body.style.overflow = "";
+  if (reader) {
+    reader.classList.remove("show");
+  }
+
+  document.body.style.overflow =
+    "";
 }
 
 
@@ -306,13 +383,20 @@ function closeReader() {
 function surpriseMe() {
 
   if (!stories.length) {
-    alert("Abhi koi story available nahi hai.");
+
+    alert(
+      "Abhi koi story available nahi hai."
+    );
+
     return;
   }
 
 
   const randomIndex =
-    Math.floor(Math.random() * stories.length);
+    Math.floor(
+      Math.random() * stories.length
+    );
+
 
   const randomStory =
     stories[randomIndex];
@@ -326,25 +410,12 @@ function surpriseMe() {
    MUSIC
 ========================= */
 
-/*
-  IMPORTANT:
-  Yahan apne uploaded MP3 ke URLs dalne hain.
-
-  Example:
-  romantic: [
-    {
-      name: "Romantic Piano",
-      url: "https://....mp3"
-    }
-  ]
-*/
-
 const musicTracks = {
 
   romantic: [
     {
       name: "Romantic Piano",
-      url: ""
+      url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
     }
   ],
 
@@ -372,14 +443,23 @@ const musicTracks = {
 };
 
 
-let currentMood = "romantic";
+let currentMood =
+  "romantic";
+
 let currentTrack = 0;
 
 
+/* =========================
+   SET MOOD
+========================= */
+
 function setMood(mood) {
 
-  currentMood = mood;
-  currentTrack = 0;
+  currentMood =
+    mood;
+
+  currentTrack =
+    0;
 
 
   document
@@ -398,21 +478,32 @@ function setMood(mood) {
 }
 
 
+/* =========================
+   LOAD MUSIC
+========================= */
+
 function loadMusic() {
 
-  const tracks = musicTracks[currentMood] || [];
+  const tracks =
+    musicTracks[currentMood] || [];
+
 
   if (!tracks.length) return;
 
 
-  const track = tracks[currentTrack];
+  const track =
+    tracks[currentTrack];
+
 
   const name =
-    document.getElementById("trackName");
+    document.getElementById(
+      "trackName"
+    );
 
 
   if (name) {
-    name.textContent = track.name;
+    name.textContent =
+      track.name;
   }
 
 
@@ -420,27 +511,36 @@ function loadMusic() {
 
     audio.pause();
 
-    audio.src = track.url || "";
+    audio.src =
+      track.url || "";
 
     audio.load();
   }
 
 
   const play =
-    document.getElementById("playMusic");
+    document.getElementById(
+      "playMusic"
+    );
+
 
   if (play) {
-    play.textContent = "▶";
+    play.textContent =
+      "▶";
   }
 }
 
+
+/* =========================
+   PLAY / PAUSE
+========================= */
 
 function playMusic() {
 
   if (!audio || !audio.src) {
 
     alert(
-      "Pehle Music Lounge me licensed MP3 upload karke uska URL app.js me add karo."
+      "Is mood ka music abhi upload nahi hua hai."
     );
 
     return;
@@ -452,14 +552,23 @@ function playMusic() {
     audio.play()
       .then(function () {
 
-        document.getElementById(
-          "playMusic"
-        ).textContent = "⏸";
+        const button =
+          document.getElementById(
+            "playMusic"
+          );
+
+        if (button) {
+          button.textContent =
+            "⏸";
+        }
 
       })
       .catch(function (error) {
 
-        console.error(error);
+        console.error(
+          "Audio error:",
+          error
+        );
 
       });
 
@@ -467,37 +576,70 @@ function playMusic() {
 
     audio.pause();
 
-    document.getElementById(
-      "playMusic"
-    ).textContent = "▶";
+
+    const button =
+      document.getElementById(
+        "playMusic"
+      );
+
+
+    if (button) {
+      button.textContent =
+        "▶";
+    }
   }
 }
 
 
+/* =========================
+   NEXT
+========================= */
+
 function nextMusic() {
 
-  const tracks = musicTracks[currentMood];
+  const tracks =
+    musicTracks[currentMood];
 
-  if (!tracks || !tracks.length) return;
+
+  if (!tracks ||
+      !tracks.length) {
+    return;
+  }
 
 
   currentTrack =
-    (currentTrack + 1) % tracks.length;
+    (currentTrack + 1) %
+    tracks.length;
+
 
   loadMusic();
 }
 
 
+/* =========================
+   PREVIOUS
+========================= */
+
 function previousMusic() {
 
-  const tracks = musicTracks[currentMood];
+  const tracks =
+    musicTracks[currentMood];
 
-  if (!tracks || !tracks.length) return;
+
+  if (!tracks ||
+      !tracks.length) {
+    return;
+  }
 
 
   currentTrack =
-    (currentTrack - 1 + tracks.length) %
+    (
+      currentTrack -
+      1 +
+      tracks.length
+    ) %
     tracks.length;
+
 
   loadMusic();
 }
@@ -511,50 +653,70 @@ document
   .querySelectorAll(".mood")
   .forEach(function (button) {
 
-    button.addEventListener("click", function () {
+    button.addEventListener(
+      "click",
+      function () {
 
-      setMood(button.dataset.mood);
+        setMood(
+          button.dataset.mood
+        );
 
-    });
+      }
+    );
 
   });
 
 
-const playMusicButton =
-  document.getElementById("playMusic");
+const playButton =
+  document.getElementById(
+    "playMusic"
+  );
 
-if (playMusicButton) {
-  playMusicButton.addEventListener(
+
+if (playButton) {
+
+  playButton.addEventListener(
     "click",
     playMusic
   );
+
 }
 
 
-const nextMusicButton =
-  document.getElementById("nextMusic");
+const nextButton =
+  document.getElementById(
+    "nextMusic"
+  );
 
-if (nextMusicButton) {
-  nextMusicButton.addEventListener(
+
+if (nextButton) {
+
+  nextButton.addEventListener(
     "click",
     nextMusic
   );
+
 }
 
 
-const prevMusicButton =
-  document.getElementById("prevMusic");
+const previousButton =
+  document.getElementById(
+    "prevMusic"
+  );
 
-if (prevMusicButton) {
-  prevMusicButton.addEventListener(
+
+if (previousButton) {
+
+  previousButton.addEventListener(
     "click",
     previousMusic
   );
+
 }
 
 
 /* =========================
-   MUSIC PROGRESS
+   AUDIO PROGRESS
 ========================= */
 
 if (audio) {
@@ -563,20 +725,29 @@ if (audio) {
     "timeupdate",
     function () {
 
-      if (!audio.duration) return;
+      if (!audio.duration) {
+        return;
+      }
 
 
       const percentage =
-        (audio.currentTime / audio.duration) * 100;
+        (
+          audio.currentTime /
+          audio.duration
+        ) * 100;
 
 
       const bar =
-        document.getElementById("progressBar");
+        document.getElementById(
+          "progressBar"
+        );
 
 
       if (bar) {
+
         bar.style.width =
           percentage + "%";
+
       }
 
     }
@@ -590,11 +761,15 @@ if (audio) {
       nextMusic();
 
       if (audio.src) {
-        audio.play().catch(function () {});
+
+        audio.play()
+          .catch(function () {});
+
       }
 
     }
   );
+
 }
 
 
@@ -603,7 +778,9 @@ if (audio) {
 ========================= */
 
 const menuBtn =
-  document.getElementById("menuBtn");
+  document.getElementById(
+    "menuBtn"
+  );
 
 
 if (menuBtn) {
@@ -613,23 +790,33 @@ if (menuBtn) {
     function () {
 
       const nav =
-        document.querySelector(".nav-links");
+        document.querySelector(
+          ".nav-links"
+        );
+
 
       if (nav) {
-        nav.classList.toggle("open");
+
+        nav.classList.toggle(
+          "open"
+        );
+
       }
 
     }
   );
+
 }
 
 
 /* =========================
-   CLOSE READER OUTSIDE
+   CLOSE READER
 ========================= */
 
 const reader =
-  document.getElementById("reader");
+  document.getElementById(
+    "reader"
+  );
 
 
 if (reader) {
@@ -638,25 +825,34 @@ if (reader) {
     "click",
     function (event) {
 
-      if (event.target === reader) {
+      if (
+        event.target === reader
+      ) {
+
         closeReader();
+
       }
 
     }
   );
+
 }
 
 
 /* =========================
-   ESC KEY
+   ESCAPE
 ========================= */
 
 document.addEventListener(
   "keydown",
   function (event) {
 
-    if (event.key === "Escape") {
+    if (
+      event.key === "Escape"
+    ) {
+
       closeReader();
+
     }
 
   }
@@ -668,11 +864,16 @@ document.addEventListener(
 ========================= */
 
 const year =
-  document.getElementById("year");
+  document.getElementById(
+    "year"
+  );
+
 
 if (year) {
+
   year.textContent =
     new Date().getFullYear();
+
 }
 
 

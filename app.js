@@ -1,142 +1,80 @@
-const SUPABASE_URL = "https://bxgtcnagqjtfbsztgnmb.supabase.co";
-const SUPABASE_KEY = "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
+const SUPABASE_URL =
+  "https://bxgtcnagqjtfbsztgnmb.supabase.co";
+
+const SUPABASE_KEY =
+  "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
 
 const supabaseClient =
-  supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  supabase.createClient(
+    SUPABASE_URL,
+    SUPABASE_KEY
+  );
+
+
+/* =========================
+   GLOBAL
+========================= */
 
 let stories = [];
 let category = "All";
 let currentStory = null;
-let currentMood = "romantic";
-let currentTrack = 0;
 
-const grid = document.getElementById("grid");
-const search = document.getElementById("search");
-const audio = document.getElementById("audio");
+const grid =
+  document.getElementById("grid");
 
-const musicTracks = {
-  romantic: [{
-    name: "Romantic Piano",
-    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
-  }],
-  sad: [{
-    name: "Sad Piano",
-    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
-  }],
-  horror: [{
-    name: "Horror Ambience",
-    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
-  }],
-  calm: [{
-    name: "Calm Night",
-    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
-  }]
-};
+const search =
+  document.getElementById("search");
+
+const audio =
+  document.getElementById("audio");
 
 
 /* =========================
-   SECURITY
+   HELPERS
 ========================= */
 
 function escapeHTML(text) {
-  return String(text || "").replace(/[&<>"']/g, m => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;"
-  }[m]));
-}
 
+  return String(text || "").replace(
+    /[&<>"']/g,
+    function (m) {
 
-/* =========================
-   LOCAL STORAGE
-========================= */
+      return {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;"
+      }[m];
 
-function getFavorites() {
-  try {
-    return JSON.parse(
-      localStorage.getItem("akashruru_favorites") || "[]"
-    );
-  } catch {
-    return [];
-  }
-}
-
-function saveFavorites(list) {
-  localStorage.setItem(
-    "akashruru_favorites",
-    JSON.stringify(list)
+    }
   );
+
 }
 
-function isFavorite(id) {
-  return getFavorites().includes(String(id));
-}
-
-function toggleFavorite(id) {
-
-  const sid = String(id);
-  let list = getFavorites();
-
-  if (list.includes(sid)) {
-    list = list.filter(x => x !== sid);
-    showToast("Removed from favorites");
-  } else {
-    list.push(sid);
-    showToast("❤️ Added to favorites");
-  }
-
-  saveFavorites(list);
-
-  render();
-}
-
-
-/* =========================
-   TOAST
-========================= */
 
 function showToast(message) {
 
-  let toast = document.getElementById("toast");
+  const toast =
+    document.getElementById("toast");
 
-  if (!toast) {
-
-    toast = document.createElement("div");
-    toast.id = "toast";
-
-    Object.assign(toast.style, {
-      position: "fixed",
-      left: "50%",
-      bottom: "30px",
-      transform: "translateX(-50%) translateY(20px)",
-      padding: "13px 20px",
-      borderRadius: "30px",
-      background: "#ff79b7",
-      color: "#240918",
-      font: "700 13px Arial",
-      zIndex: "99999",
-      opacity: "0",
-      transition: ".3s",
-      pointerEvents: "none"
-    });
-
-    document.body.appendChild(toast);
-  }
+  if (!toast) return;
 
   toast.textContent = message;
-  toast.style.opacity = "1";
-  toast.style.transform =
-    "translateX(-50%) translateY(0)";
 
-  clearTimeout(window.toastTimer);
+  toast.classList.add("show");
 
-  window.toastTimer = setTimeout(() => {
-    toast.style.opacity = "0";
-    toast.style.transform =
-      "translateX(-50%) translateY(20px)";
-  }, 1800);
+  clearTimeout(
+    window.toastTimer
+  );
+
+  window.toastTimer =
+    setTimeout(function () {
+
+      toast.classList.remove("show");
+
+    }, 2200);
+
 }
 
 
@@ -146,38 +84,58 @@ function showToast(message) {
 
 async function loadStories() {
 
-  if (grid) {
-    grid.innerHTML =
-      `<div class="empty"><p>Loading stories...</p></div>`;
-  }
+  if (!grid) return;
 
-  const { data, error } = await supabaseClient
+  grid.innerHTML = `
+    <div class="empty">
+      <h3>Loading stories...</h3>
+      <p>Just a moment ♥</p>
+    </div>
+  `;
+
+
+  const {
+    data,
+    error
+  } = await supabaseClient
     .from("stories")
     .select("*")
-    .order("created_at", {
-      ascending: false
-    });
+    .order(
+      "created_at",
+      {
+        ascending: false
+      }
+    );
+
 
   if (error) {
 
-    console.error(error);
+    console.error(
+      "Supabase error:",
+      error
+    );
 
-    if (grid) {
-      grid.innerHTML =
-        `<div class="empty">
-          <h3>Stories load nahi ho paayi.</h3>
-          <p>Please try again.</p>
-        </div>`;
-    }
+    grid.innerHTML = `
+      <div class="empty">
+        <h3>Stories load nahi ho paayi.</h3>
+        <p>Please try again.</p>
+      </div>
+    `;
 
     return;
   }
 
-  stories = data || [];
+
+  stories =
+    data || [];
+
 
   updateStoryCount();
+
   render();
+
   renderFeatured();
+
 }
 
 
@@ -188,196 +146,176 @@ async function loadStories() {
 function updateStoryCount() {
 
   const counter =
-    document.getElementById("storyCount");
+    document.getElementById(
+      "storyCount"
+    );
 
   if (counter) {
-    animateNumber(
-      counter,
-      stories.length
-    );
-  }
-}
 
-function animateNumber(element, target) {
+    counter.textContent =
+      stories.length;
 
-  const duration = 700;
-  const start = performance.now();
-
-  function step(now) {
-
-    const progress =
-      Math.min(
-        (now - start) / duration,
-        1
-      );
-
-    const value =
-      Math.floor(
-        target * (1 - Math.pow(1 - progress, 3))
-      );
-
-    element.textContent = value;
-
-    if (progress < 1) {
-      requestAnimationFrame(step);
-    }
   }
 
-  requestAnimationFrame(step);
 }
 
 
 /* =========================
-   GET FILTERED STORIES
-========================= */
-
-function getFilteredStories() {
-
-  const query =
-    search
-      ? search.value.toLowerCase().trim()
-      : "";
-
-  return stories.filter(story => {
-
-    const title =
-      String(story.title || "").toLowerCase();
-
-    const body =
-      String(
-        story.body ||
-        story.content ||
-        ""
-      ).toLowerCase();
-
-    const matchesCategory =
-      category === "All" ||
-      story.category === category;
-
-    const matchesSearch =
-      !query ||
-      title.includes(query) ||
-      body.includes(query);
-
-    return matchesCategory && matchesSearch;
-  });
-}
-
-
-/* =========================
-   RENDER STORIES
+   STORY CARD
 ========================= */
 
 function render() {
 
   if (!grid) return;
 
+
+  const query =
+    search
+      ? search.value
+          .toLowerCase()
+          .trim()
+      : "";
+
+
   const filtered =
-    getFilteredStories();
+    stories.filter(
+      function (story) {
+
+        const title =
+          String(
+            story.title || ""
+          ).toLowerCase();
+
+        const body =
+          String(
+            story.body || ""
+          ).toLowerCase();
+
+        const storyCategory =
+          String(
+            story.category || ""
+          );
+
+
+        const matchesCategory =
+          category === "All" ||
+          storyCategory === category;
+
+
+        const matchesSearch =
+          !query ||
+          title.includes(query) ||
+          body.includes(query);
+
+
+        return (
+          matchesCategory &&
+          matchesSearch
+        );
+
+      }
+    );
+
 
   if (!filtered.length) {
 
     grid.innerHTML = `
       <div class="empty">
         <h3>No stories found</h3>
-        <p>Try another category or search.</p>
+        <p>
+          Try another category or search.
+        </p>
       </div>
     `;
 
     return;
   }
 
+
   grid.innerHTML =
-    filtered.map(story => {
+    filtered.map(
+      function (story) {
 
-      const image =
-        story.image_url
-          ? `
-            <img
-              src="${escapeHTML(story.image_url)}"
-              alt="${escapeHTML(story.title)}"
-              loading="lazy"
-              style="
-                width:100%;
-                height:160px;
-                object-fit:cover;
-                border-radius:14px;
-                margin-bottom:15px;
-              "
-            >
-          `
-          : "";
+        const image =
+          story.image_url
+            ? `
+              <img
+                src="${escapeHTML(
+                  story.image_url
+                )}"
+                alt="${escapeHTML(
+                  story.title
+                )}"
+                loading="lazy"
+                style="
+                  width:100%;
+                  height:160px;
+                  object-fit:cover;
+                  border-radius:14px;
+                  margin-bottom:15px;
+                "
+              >
+            `
+            : "";
 
-      const favorite =
-        isFavorite(story.id)
-          ? "♥"
-          : "♡";
 
-      return `
-        <article
-          class="card"
-          data-story-id="${escapeHTML(story.id)}">
+        return `
+          <article
+            class="card"
+            data-id="${escapeHTML(
+              story.id
+            )}">
 
-          ${image}
-
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            gap:10px;
-          ">
+            ${image}
 
             <small>
-              ${escapeHTML(story.category)}
+              ${escapeHTML(
+                story.category
+              )}
             </small>
 
-            <button
-              type="button"
-              onclick="event.stopPropagation();toggleFavorite('${escapeHTML(story.id)}')"
-              style="
-                background:none;
-                border:0;
-                color:#ff79b7;
-                font-size:25px;
-                cursor:pointer;
-              "
-              aria-label="Favorite">
-              ${favorite}
-            </button>
+            <h3>
+              ${escapeHTML(
+                story.title
+              )}
+            </h3>
 
-          </div>
+            <p>
+              ${escapeHTML(
+                story.body
+              )}
+            </p>
 
-          <h3>
-            ${escapeHTML(story.title)}
-          </h3>
+            <span class="read">
+              Read story →
+            </span>
 
-          <p>
-            ${escapeHTML(
-              story.body ||
-              story.content ||
-              ""
-            )}
-          </p>
+          </article>
+        `;
 
-          <span class="read">
-            Read story →
-          </span>
+      }
+    ).join("");
 
-        </article>
-      `;
-
-    }).join("");
 
   document
-    .querySelectorAll(".card[data-story-id]")
-    .forEach(card => {
+    .querySelectorAll(".card")
+    .forEach(
+      function (card) {
 
-      card.addEventListener(
-        "click",
-        () => openReader(card.dataset.storyId)
-      );
+        card.addEventListener(
+          "click",
+          function () {
 
-    });
+            openReader(
+              card.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
@@ -388,12 +326,16 @@ function render() {
 function renderFeatured() {
 
   const box =
-    document.getElementById("featuredGrid");
+    document.getElementById(
+      "featuredGrid"
+    );
 
   if (!box) return;
 
+
   const featured =
     stories.slice(0, 3);
+
 
   if (!featured.length) {
 
@@ -401,49 +343,71 @@ function renderFeatured() {
       "<p>Stories coming soon...</p>";
 
     return;
+
   }
 
+
   box.innerHTML =
-    featured.map(story => `
+    featured.map(
+      function (story) {
 
-      <article
-        class="featured-card"
-        data-featured-id="${escapeHTML(story.id)}">
+        return `
+          <article
+            class="featured-card"
+            data-id="${escapeHTML(
+              story.id
+            )}">
 
-        <small>
-          ${escapeHTML(story.category)}
-        </small>
+            <small>
+              ${escapeHTML(
+                story.category
+              )}
+            </small>
 
-        <h3>
-          ${escapeHTML(story.title)}
-        </h3>
+            <h3>
+              ${escapeHTML(
+                story.title
+              )}
+            </h3>
 
-        <p>
-          ${escapeHTML(
-            story.body ||
-            story.content ||
-            ""
-          )}
-        </p>
+            <p>
+              ${escapeHTML(
+                story.body
+              )}
+            </p>
 
-        <span class="read">
-          Read story →
-        </span>
+            <span class="read">
+              Read story →
+            </span>
 
-      </article>
+          </article>
+        `;
 
-    `).join("");
+      }
+    ).join("");
+
 
   document
-    .querySelectorAll("[data-featured-id]")
-    .forEach(card => {
+    .querySelectorAll(
+      ".featured-card"
+    )
+    .forEach(
+      function (card) {
 
-      card.addEventListener(
-        "click",
-        () => openReader(card.dataset.featuredId)
-      );
+        card.addEventListener(
+          "click",
+          function () {
 
-    });
+            openReader(
+              card.dataset.id
+            );
+
+          }
+        );
+
+      }
+    );
+
 }
 
 
@@ -452,29 +416,47 @@ function renderFeatured() {
 ========================= */
 
 document
-  .querySelectorAll("#filters button")
-  .forEach(button => {
+  .querySelectorAll(
+    "#filters button"
+  )
+  .forEach(
+    function (button) {
 
-    button.addEventListener(
-      "click",
-      () => {
+      button.addEventListener(
+        "click",
+        function () {
 
-        document
-          .querySelectorAll("#filters button")
-          .forEach(b =>
-            b.classList.remove("on")
+          document
+            .querySelectorAll(
+              "#filters button"
+            )
+            .forEach(
+              function (b) {
+
+                b.classList.remove(
+                  "on"
+                );
+
+              }
+            );
+
+
+          button.classList.add(
+            "on"
           );
 
-        button.classList.add("on");
 
-        category =
-          button.dataset.c || "All";
+          category =
+            button.dataset.c;
 
-        render();
-      }
-    );
 
-  });
+          render();
+
+        }
+      );
+
+    }
+  );
 
 
 /* =========================
@@ -485,26 +467,39 @@ if (search) {
 
   search.addEventListener(
     "input",
-    render
+    function () {
+
+      render();
+
+    }
   );
 
 }
 
 
 /* =========================
-   READER
+   OPEN READER
 ========================= */
 
 function openReader(id) {
 
   const story =
     stories.find(
-      s => String(s.id) === String(id)
+      function (s) {
+
+        return String(s.id) ===
+          String(id);
+
+      }
     );
+
 
   if (!story) return;
 
-  currentStory = story;
+
+  currentStory =
+    story;
+
 
   const rc =
     document.getElementById("rc");
@@ -515,19 +510,30 @@ function openReader(id) {
   const rb =
     document.getElementById("rb");
 
-  if (rc)
+
+  if (rc) {
+
     rc.textContent =
       story.category || "";
 
-  if (rt)
+  }
+
+
+  if (rt) {
+
     rt.textContent =
       story.title || "";
 
-  if (rb)
+  }
+
+
+  if (rb) {
+
     rb.textContent =
-      story.body ||
-      story.content ||
-      "";
+      story.body || "";
+
+  }
+
 
   const imageWrap =
     document.getElementById(
@@ -539,41 +545,79 @@ function openReader(id) {
       "readerImage"
     );
 
+
   if (story.image_url) {
 
-    if (image)
+    if (image) {
+
       image.src =
         story.image_url;
 
-    if (imageWrap)
-      imageWrap.classList.add("show");
+    }
+
+    if (imageWrap) {
+
+      imageWrap.classList.add(
+        "show"
+      );
+
+    }
 
   } else {
 
-    if (image)
-      image.removeAttribute("src");
+    if (image) {
 
-    if (imageWrap)
-      imageWrap.classList.remove("show");
+      image.removeAttribute(
+        "src"
+      );
+
+    }
+
+    if (imageWrap) {
+
+      imageWrap.classList.remove(
+        "show"
+      );
+
+    }
+
   }
 
-  const reader =
-    document.getElementById("reader");
 
-  if (reader)
-    reader.classList.add("show");
+  const reader =
+    document.getElementById(
+      "reader"
+    );
+
+
+  if (reader) {
+
+    reader.classList.add(
+      "show"
+    );
+
+  }
+
 
   document.body.style.overflow =
     "hidden";
 
-  localStorage.setItem(
-    "akashruru_last_story",
-    String(story.id)
-  );
 
-  updateReadingProgress();
+  const box =
+    document.querySelector(
+      ".reader-box"
+    );
 
-  showToast("📖 Enjoy the story");
+
+  if (box) {
+
+    box.scrollTop = 0;
+
+  }
+
+
+  updateFavoriteButton();
+
 }
 
 
@@ -584,55 +628,28 @@ function openReader(id) {
 function closeReader() {
 
   const reader =
-    document.getElementById("reader");
-
-  if (reader)
-    reader.classList.remove("show");
-
-  document.body.style.overflow = "";
-}
-
-
-/* =========================
-   READING PROGRESS
-========================= */
-
-function updateReadingProgress() {
-
-  const box =
-    document.querySelector(
-      ".reader-box"
-    );
-
-  const bar =
     document.getElementById(
-      "readingProgress"
+      "reader"
     );
 
-  if (!box || !bar) return;
 
-  const scrollTop =
-    box.scrollTop;
+  if (reader) {
 
-  const scrollHeight =
-    box.scrollHeight -
-    box.clientHeight;
+    reader.classList.remove(
+      "show"
+    );
 
-  const percent =
-    scrollHeight > 0
-      ? (scrollTop / scrollHeight) * 100
-      : 0;
+  }
 
-  bar.style.width =
-    Math.min(100, Math.max(0, percent))
-    + "%";
+
+  document.body.style.overflow =
+    "";
+
+
+  currentStory =
+    null;
+
 }
-
-document.addEventListener(
-  "scroll",
-  updateReadingProgress,
-  true
-);
 
 
 /* =========================
@@ -644,21 +661,155 @@ function surpriseMe() {
   if (!stories.length) {
 
     showToast(
-      "No stories available yet."
+      "Abhi koi story available nahi hai."
     );
 
     return;
+
   }
 
-  const random =
-    stories[
-      Math.floor(
-        Math.random() *
-        stories.length
-      )
-    ];
 
-  openReader(random.id);
+  const randomIndex =
+    Math.floor(
+      Math.random() *
+      stories.length
+    );
+
+
+  const randomStory =
+    stories[randomIndex];
+
+
+  openReader(
+    randomStory.id
+  );
+
+}
+
+
+/* =========================
+   FAVORITES
+========================= */
+
+function getFavorites() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(
+        "akashruru_favorites"
+      ) || "[]"
+    );
+
+  } catch {
+
+    return [];
+
+  }
+
+}
+
+
+function saveFavorites(list) {
+
+  localStorage.setItem(
+    "akashruru_favorites",
+    JSON.stringify(list)
+  );
+
+}
+
+
+function toggleFavorite(id) {
+
+  if (!id) return;
+
+
+  let favorites =
+    getFavorites();
+
+
+  const exists =
+    favorites.some(
+      function (item) {
+
+        return String(item) ===
+          String(id);
+
+      }
+    );
+
+
+  if (exists) {
+
+    favorites =
+      favorites.filter(
+        function (item) {
+
+          return String(item) !==
+            String(id);
+
+        }
+      );
+
+    showToast(
+      "Removed from favorites"
+    );
+
+  } else {
+
+    favorites.push(id);
+
+    showToast(
+      "♥ Added to favorites"
+    );
+
+  }
+
+
+  saveFavorites(
+    favorites
+  );
+
+
+  updateFavoriteButton();
+
+}
+
+
+function updateFavoriteButton() {
+
+  if (!currentStory) return;
+
+
+  const favorites =
+    getFavorites();
+
+
+  const isFavorite =
+    favorites.some(
+      function (id) {
+
+        return String(id) ===
+          String(currentStory.id);
+
+      }
+    );
+
+
+  const buttons =
+    document.querySelectorAll(
+      ".reader-actions button"
+    );
+
+
+  if (buttons[0]) {
+
+    buttons[0].textContent =
+      isFavorite ? "♥" : "♡";
+
+  }
+
 }
 
 
@@ -670,45 +821,49 @@ async function shareCurrentStory() {
 
   if (!currentStory) return;
 
+
   const title =
     currentStory.title ||
     "AkashRuru Story";
 
-  const url =
-    window.location.href;
 
-  if (navigator.share) {
+  const text =
+    "Read this story on AkashRuru Stories: " +
+    title;
 
-    try {
+
+  try {
+
+    if (
+      navigator.share
+    ) {
 
       await navigator.share({
-        title,
-        text:
-          "Read this story on AkashRuru Stories",
-        url
+        title:title,
+        text:text,
+        url:window.location.href
       });
 
       return;
 
-    } catch {}
-  }
+    }
 
-  try {
 
     await navigator.clipboard.writeText(
-      `${title}\n${url}`
+      window.location.href
     );
+
 
     showToast(
-      "🔗 Story link copied"
+      "Story link copied ♥"
     );
 
-  } catch {
+  } catch (error) {
 
-    showToast(
-      "Share not available"
-    );
+    console.log(error);
+
   }
+
 }
 
 
@@ -720,11 +875,12 @@ async function copyCurrentStory() {
 
   if (!currentStory) return;
 
+
   const text =
-    `${currentStory.title}\n\n` +
-    `${currentStory.body ||
-      currentStory.content ||
-      ""}`;
+    currentStory.title +
+    "\n\n" +
+    currentStory.body;
+
 
   try {
 
@@ -733,20 +889,126 @@ async function copyCurrentStory() {
     );
 
     showToast(
-      "📋 Story copied"
+      "Story copied ♥"
     );
 
   } catch {
 
     showToast(
-      "Copy failed"
+      "Copy nahi ho paya."
     );
+
   }
+
 }
 
 
 /* =========================
-   MUSIC MOOD
+   READING PROGRESS
+========================= */
+
+const readerBox =
+  document.querySelector(
+    ".reader-box"
+  );
+
+
+if (readerBox) {
+
+  readerBox.addEventListener(
+    "scroll",
+    function () {
+
+      const max =
+        readerBox.scrollHeight -
+        readerBox.clientHeight;
+
+
+      if (max <= 0) return;
+
+
+      const percent =
+        (
+          readerBox.scrollTop /
+          max
+        ) * 100;
+
+
+      const progress =
+        document.getElementById(
+          "readingProgress"
+        );
+
+
+      if (progress) {
+
+        progress.style.width =
+          Math.min(
+            100,
+            Math.max(
+              0,
+              percent
+            )
+          ) + "%";
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   MUSIC
+========================= */
+
+const musicTracks = {
+
+  romantic:[
+    {
+      name:"Romantic Piano",
+      url:
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
+    }
+  ],
+
+  sad:[
+    {
+      name:"Sad Piano",
+      url:
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
+    }
+  ],
+
+  horror:[
+    {
+      name:"Horror Ambience",
+      url:
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
+    }
+  ],
+
+  calm:[
+    {
+      name:"Calm Night",
+      url:
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
+    }
+  ]
+
+};
+
+
+let currentMood =
+  "romantic";
+
+let currentTrack =
+  0;
+
+
+/* =========================
+   SET MOOD
 ========================= */
 
 function setMood(mood) {
@@ -754,20 +1016,27 @@ function setMood(mood) {
   currentMood =
     mood;
 
-  currentTrack = 0;
+  currentTrack =
+    0;
+
 
   document
     .querySelectorAll(".mood")
-    .forEach(button => {
+    .forEach(
+      function (button) {
 
-      button.classList.toggle(
-        "active",
-        button.dataset.mood === mood
-      );
+        button.classList.toggle(
+          "active",
+          button.dataset.mood ===
+          mood
+        );
 
-    });
+      }
+    );
+
 
   loadMusic();
+
 }
 
 
@@ -778,21 +1047,30 @@ function setMood(mood) {
 function loadMusic() {
 
   const tracks =
-    musicTracks[currentMood] || [];
+    musicTracks[currentMood] ||
+    [];
+
 
   if (!tracks.length) return;
 
+
   const track =
     tracks[currentTrack];
+
 
   const name =
     document.getElementById(
       "trackName"
     );
 
-  if (name)
+
+  if (name) {
+
     name.textContent =
       track.name;
+
+  }
+
 
   if (audio) {
 
@@ -802,23 +1080,23 @@ function loadMusic() {
       track.url;
 
     audio.load();
+
   }
+
 
   const play =
     document.getElementById(
       "playMusic"
     );
 
-  if (play)
-    play.textContent = "▶";
 
-  const bar =
-    document.getElementById(
-      "progressBar"
-    );
+  if (play) {
 
-  if (bar)
-    bar.style.width = "0%";
+    play.textContent =
+      "▶";
+
+  }
+
 }
 
 
@@ -828,42 +1106,92 @@ function loadMusic() {
 
 function playMusic() {
 
-  if (!audio) return;
+  if (!audio) {
+
+    showToast(
+      "Audio player nahi mila."
+    );
+
+    return;
+
+  }
+
+
+  const tracks =
+    musicTracks[currentMood] ||
+    [];
+
+
+  if (
+    !tracks.length ||
+    !tracks[currentTrack] ||
+    !tracks[currentTrack].url
+  ) {
+
+    showToast(
+      "Music available nahi hai."
+    );
+
+    return;
+
+  }
+
 
   if (audio.paused) {
 
     audio.play()
-      .then(() => {
+      .then(
+        function () {
 
-        const button =
-          document.getElementById(
-            "playMusic"
+          const button =
+            document.getElementById(
+              "playMusic"
+            );
+
+          if (button) {
+
+            button.textContent =
+              "⏸";
+
+          }
+
+        }
+      )
+      .catch(
+        function (error) {
+
+          console.error(
+            "Audio error:",
+            error
           );
 
-        if (button)
-          button.textContent = "⏸";
+          showToast(
+            "Music play nahi hua."
+          );
 
-      })
-      .catch(() => {
-
-        showToast(
-          "Tap again to start music"
-        );
-
-      });
+        }
+      );
 
   } else {
 
     audio.pause();
+
 
     const button =
       document.getElementById(
         "playMusic"
       );
 
-    if (button)
-      button.textContent = "▶";
+
+    if (button) {
+
+      button.textContent =
+        "▶";
+
+    }
+
   }
+
 }
 
 
@@ -876,13 +1204,19 @@ function nextMusic() {
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks?.length) return;
+
+  if (!tracks || !tracks.length)
+    return;
+
 
   currentTrack =
-    (currentTrack + 1) %
-    tracks.length;
+    (
+      currentTrack + 1
+    ) % tracks.length;
+
 
   loadMusic();
+
 }
 
 
@@ -895,17 +1229,21 @@ function previousMusic() {
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks?.length) return;
+
+  if (!tracks || !tracks.length)
+    return;
+
 
   currentTrack =
     (
       currentTrack -
       1 +
       tracks.length
-    ) %
-    tracks.length;
+    ) % tracks.length;
+
 
   loadMusic();
+
 }
 
 
@@ -915,36 +1253,67 @@ function previousMusic() {
 
 document
   .querySelectorAll(".mood")
-  .forEach(button => {
+  .forEach(
+    function (button) {
 
-    button.addEventListener(
-      "click",
-      () =>
-        setMood(button.dataset.mood)
-    );
+      button.addEventListener(
+        "click",
+        function () {
 
-  });
+          setMood(
+            button.dataset.mood
+          );
 
-document
-  .getElementById("playMusic")
-  ?.addEventListener(
+        }
+      );
+
+    }
+  );
+
+
+const playButton =
+  document.getElementById(
+    "playMusic"
+  );
+
+if (playButton) {
+
+  playButton.addEventListener(
     "click",
     playMusic
   );
 
-document
-  .getElementById("nextMusic")
-  ?.addEventListener(
+}
+
+
+const nextButton =
+  document.getElementById(
+    "nextMusic"
+  );
+
+if (nextButton) {
+
+  nextButton.addEventListener(
     "click",
     nextMusic
   );
 
-document
-  .getElementById("prevMusic")
-  ?.addEventListener(
+}
+
+
+const previousButton =
+  document.getElementById(
+    "prevMusic"
+  );
+
+if (previousButton) {
+
+  previousButton.addEventListener(
     "click",
     previousMusic
   );
+
+}
 
 
 /* =========================
@@ -955,9 +1324,11 @@ if (audio) {
 
   audio.addEventListener(
     "timeupdate",
-    () => {
+    function () {
 
-      if (!audio.duration) return;
+      if (!audio.duration)
+        return;
+
 
       const percentage =
         (
@@ -965,28 +1336,60 @@ if (audio) {
           audio.duration
         ) * 100;
 
+
       const bar =
         document.getElementById(
           "progressBar"
         );
 
-      if (bar)
+
+      if (bar) {
+
         bar.style.width =
           percentage + "%";
+
+      }
+
     }
   );
+
 
   audio.addEventListener(
     "ended",
-    () => {
+    function () {
 
       nextMusic();
 
-      audio.play()
-        .catch(() => {});
+
+      if (audio.src) {
+
+        audio.play()
+          .then(
+            function () {
+
+              const button =
+                document.getElementById(
+                  "playMusic"
+                );
+
+              if (button) {
+
+                button.textContent =
+                  "⏸";
+
+              }
+
+            }
+          )
+          .catch(
+            function () {}
+          );
+
+      }
 
     }
   );
+
 }
 
 
@@ -994,60 +1397,84 @@ if (audio) {
    MOBILE MENU
 ========================= */
 
-document
-  .getElementById("menuBtn")
-  ?.addEventListener(
-    "click",
-    () => {
-
-      document
-        .querySelector(".nav-links")
-        ?.classList.toggle("open");
-
-    }
+const menuBtn =
+  document.getElementById(
+    "menuBtn"
   );
 
 
-/* =========================
-   READER CLOSE
-========================= */
+if (menuBtn) {
 
-document
-  .getElementById("reader")
-  ?.addEventListener(
+  menuBtn.addEventListener(
     "click",
-    event => {
+    function () {
 
-      if (
-        event.target.id === "reader"
-      ) {
-        closeReader();
+      const nav =
+        document.querySelector(
+          ".nav-links"
+        );
+
+
+      if (nav) {
+
+        nav.classList.toggle(
+          "open"
+        );
+
       }
 
     }
   );
 
+}
+
 
 /* =========================
-   KEYBOARD
+   READER BACKDROP
+========================= */
+
+const reader =
+  document.getElementById(
+    "reader"
+  );
+
+
+if (reader) {
+
+  reader.addEventListener(
+    "click",
+    function (event) {
+
+      if (
+        event.target ===
+        reader
+      ) {
+
+        closeReader();
+
+      }
+
+    }
+  );
+
+}
+
+
+/* =========================
+   ESC KEY
 ========================= */
 
 document.addEventListener(
   "keydown",
-  event => {
-
-    if (event.key === "Escape") {
-      closeReader();
-    }
+  function (event) {
 
     if (
-      event.key === "/" &&
-      document.activeElement !== search
+      event.key ===
+      "Escape"
     ) {
 
-      event.preventDefault();
+      closeReader();
 
-      search?.focus();
     }
 
   }
@@ -1059,11 +1486,17 @@ document.addEventListener(
 ========================= */
 
 const year =
-  document.getElementById("year");
+  document.getElementById(
+    "year"
+  );
 
-if (year)
+
+if (year) {
+
   year.textContent =
     new Date().getFullYear();
+
+}
 
 
 /* =========================

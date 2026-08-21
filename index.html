@@ -51,9 +51,7 @@
     <div class="nav-links">
 
       <a href="#stories">Stories</a>
-
       <a href="#music">Music</a>
-
       <a href="#about">About</a>
 
       <a class="admin" href="admin.html">
@@ -241,6 +239,7 @@
     <div class="section-heading">
 
       <div>
+
         <small>✦ MUSIC LOUNGE</small>
 
         <h2>Listen while you read.</h2>
@@ -254,38 +253,73 @@
     </div>
 
 
+    <!-- MUSIC MOODS -->
+
     <div class="music-moods">
 
       <button
+        type="button"
         class="mood active"
-        data-mood="romantic">
+        data-mood="romantic"
+        onclick="setMood('romantic')">
+
         ❤️
-        <span>Romantic</span>
+
+        <span>
+          Romantic
+        </span>
+
       </button>
 
+
       <button
+        type="button"
         class="mood"
-        data-mood="sad">
+        data-mood="sad"
+        onclick="setMood('sad')">
+
         💔
-        <span>Sad</span>
+
+        <span>
+          Sad
+        </span>
+
       </button>
 
+
       <button
+        type="button"
         class="mood"
-        data-mood="horror">
+        data-mood="horror"
+        onclick="setMood('horror')">
+
         👻
-        <span>Horror</span>
+
+        <span>
+          Horror
+        </span>
+
       </button>
 
+
       <button
+        type="button"
         class="mood"
-        data-mood="calm">
+        data-mood="calm"
+        onclick="setMood('calm')">
+
         🌙
-        <span>Calm</span>
+
+        <span>
+          Calm
+        </span>
+
       </button>
 
     </div>
 
+
+    <!-- MUSIC PLAYER -->
 
     <div class="music-player">
 
@@ -293,9 +327,12 @@
         ♪
       </div>
 
+
       <div class="track-info">
 
-        <small>NOW PLAYING</small>
+        <small>
+          NOW PLAYING
+        </small>
 
         <h3 id="trackName">
           Choose a mood
@@ -311,17 +348,22 @@
       <div class="music-controls">
 
         <button
+          type="button"
           id="prevMusic">
           ⏮
         </button>
 
+
         <button
+          type="button"
           id="playMusic"
           class="play">
           ▶
         </button>
 
+
         <button
+          type="button"
           id="nextMusic">
           ⏭
         </button>
@@ -329,6 +371,7 @@
       </div>
 
     </div>
+
 
     <audio
       id="audio"
@@ -346,7 +389,9 @@
 
     <div>
 
-      <small>✦ OUR LITTLE CORNER</small>
+      <small>
+        ✦ OUR LITTLE CORNER
+      </small>
 
       <h2>
         A home for stories
@@ -439,7 +484,11 @@
 </footer>
 
 
+<!-- SUPABASE -->
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<!-- APP -->
 
 <script src="app.js"></script>
 

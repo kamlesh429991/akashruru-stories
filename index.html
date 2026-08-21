@@ -4,64 +4,128 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
 
-  <title>AkashRuru Stories</title>
+  <title>AkashRuru Stories — Stories That Stay With You</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Playfair+Display:wght@500;600;700&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+  <meta
+    name="description"
+    content="AkashRuru Stories — romantic, sad, horror, friendship and emotional stories."
+  >
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<!-- PAGE LOADER -->
+
+<div id="loader">
+  <div class="loader-logo">
+    Akash<span>Ruru</span>
+  </div>
+
+  <div class="loader-line"></div>
+
+  <small>STORIES • FEELINGS • MEMORIES</small>
+</div>
+
+
+<!-- FLOATING PARTICLES -->
+
+<div class="particles" aria-hidden="true">
+  <i></i><i></i><i></i><i></i><i></i>
+  <i></i><i></i><i></i><i></i><i></i>
+  <i></i><i></i>
+</div>
+
+
+<!-- HEADER -->
+
 <header>
 
   <nav>
 
     <a class="logo" href="#">
-      <span class="logo-mark">A</span>
-      <span>Akash<span class="pink">Ruru</span></span>
+      <span class="logo-a">Akash</span><span>Ruru</span>
     </a>
 
-    <div class="navlinks">
+    <div class="nav-links">
+
       <a href="#stories">Stories</a>
-      <a href="#trending">Trending</a>
+
+      <a href="#music">Music</a>
+
       <a href="#about">About</a>
-      <a class="admin" href="admin.html">Admin</a>
+
+      <a class="admin" href="admin.html">
+        Admin
+      </a>
+
     </div>
+
+    <button
+      class="menu-btn"
+      id="menuBtn"
+      aria-label="Open menu">
+      ☰
+    </button>
 
   </nav>
 
 
+  <!-- HERO -->
+
   <section class="hero">
 
-    <small>✦ WORDS • FEELINGS • MEMORIES ✦</small>
+    <div class="hero-glow"></div>
+
+    <small class="eyebrow">
+      ✦ WORDS • FEELINGS • MEMORIES ✦
+    </small>
 
     <h1>
-      Every story<br>
-      has a <span>feeling.</span>
+      Every story
+      <em>has a feeling.</em>
     </h1>
 
     <p>
-      Romantic moments, broken hearts, mysterious nights,
-      beautiful friendships and stories that stay forever.
+      Stories for the moments when words are not enough.
+      Read something beautiful, emotional or unforgettable.
     </p>
+
 
     <div class="hero-buttons">
 
-      <a class="btn" href="#stories">
+      <a
+        class="btn primary"
+        href="#stories">
         Explore Stories
       </a>
 
-      <button id="musicBtn" class="music-btn">
-        🎵 Play Music
-      </button>
-
-      <button id="randomBtn" class="music-btn">
+      <button
+        class="btn ghost"
+        onclick="surpriseMe()">
         🎲 Surprise Me
       </button>
+
+    </div>
+
+
+    <div class="hero-stats">
+
+      <div>
+        <strong id="storyCount">—</strong>
+        <span>Stories</span>
+      </div>
+
+      <div>
+        <strong>∞</strong>
+        <span>Feelings</span>
+      </div>
+
+      <div>
+        <strong>♥</strong>
+        <span>Memories</span>
+      </div>
 
     </div>
 
@@ -70,56 +134,32 @@
 </header>
 
 
+<!-- MAIN -->
+
 <main>
 
-  <!-- STATS -->
 
-  <section class="stats">
+  <!-- FEATURED -->
 
-    <div>
-      <strong id="storyCount">0</strong>
-      <span>Stories</span>
+  <section class="featured">
+
+    <div class="section-heading">
+
+      <div>
+        <small>✦ HANDPICKED</small>
+        <h2>Featured Stories</h2>
+      </div>
+
+      <a href="#stories">
+        View all →
+      </a>
+
     </div>
 
-    <div>
-      <strong id="viewCount">0</strong>
-      <span>Reads</span>
+    <div
+      id="featuredGrid"
+      class="featured-grid">
     </div>
-
-    <div>
-      <strong id="likeCount">0</strong>
-      <span>Likes</span>
-    </div>
-
-  </section>
-
-
-  <!-- STORY OF DAY -->
-
-  <section id="featured" class="featured">
-
-    <div class="section-label">
-      STORY OF THE DAY
-    </div>
-
-    <div id="featuredBox">
-      Loading...
-    </div>
-
-  </section>
-
-
-  <!-- TRENDING -->
-
-  <section id="trending">
-
-    <div class="section-label">
-      TRENDING NOW
-    </div>
-
-    <h2>Popular Stories</h2>
-
-    <div id="trendingGrid" class="mini-grid"></div>
 
   </section>
 
@@ -128,18 +168,19 @@
 
   <section id="stories">
 
-    <div class="section-label">
-      THE COLLECTION
+    <div class="section-heading">
+
+      <div>
+        <small>THE COLLECTION</small>
+        <h2>Latest Stories</h2>
+      </div>
+
     </div>
 
-    <h2>Latest Stories</h2>
 
-    <p class="sub">
-      Choose a feeling and start reading.
-    </p>
-
-
-    <div id="filters" class="filters">
+    <div
+      id="filters"
+      class="filters">
 
       <button class="on" data-c="All">
         All
@@ -162,46 +203,163 @@
       </button>
 
       <button data-c="Other">
-        ✨ Other
+        ✦ Other
       </button>
 
     </div>
 
 
-    <input
-      id="search"
-      class="search"
-      placeholder="🔍 Search stories..."
-    >
+    <div class="search-wrap">
+
+      <span>⌕</span>
+
+      <input
+        id="search"
+        class="search"
+        placeholder="Search stories..."
+        autocomplete="off">
+
+    </div>
 
 
-    <div id="grid" class="grid"></div>
+    <div
+      id="grid"
+      class="grid">
+    </div>
+
+  </section>
+
+
+  <!-- MUSIC -->
+
+  <section
+    id="music"
+    class="music-section">
+
+    <div class="music-glow"></div>
+
+    <div class="section-heading">
+
+      <div>
+        <small>✦ MUSIC LOUNGE</small>
+
+        <h2>Listen while you read.</h2>
+
+        <p>
+          Choose a mood and let the music set the atmosphere.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="music-moods">
+
+      <button
+        class="mood active"
+        data-mood="romantic">
+        ❤️
+        <span>Romantic</span>
+      </button>
+
+      <button
+        class="mood"
+        data-mood="sad">
+        💔
+        <span>Sad</span>
+      </button>
+
+      <button
+        class="mood"
+        data-mood="horror">
+        👻
+        <span>Horror</span>
+      </button>
+
+      <button
+        class="mood"
+        data-mood="calm">
+        🌙
+        <span>Calm</span>
+      </button>
+
+    </div>
+
+
+    <div class="music-player">
+
+      <div class="album-art">
+        ♪
+      </div>
+
+      <div class="track-info">
+
+        <small>NOW PLAYING</small>
+
+        <h3 id="trackName">
+          Choose a mood
+        </h3>
+
+        <div class="progress">
+          <span id="progressBar"></span>
+        </div>
+
+      </div>
+
+
+      <div class="music-controls">
+
+        <button
+          id="prevMusic">
+          ⏮
+        </button>
+
+        <button
+          id="playMusic"
+          class="play">
+          ▶
+        </button>
+
+        <button
+          id="nextMusic">
+          ⏭
+        </button>
+
+      </div>
+
+    </div>
+
+    <audio
+      id="audio"
+      preload="none">
+    </audio>
 
   </section>
 
 
   <!-- ABOUT -->
 
-  <section id="about" class="about">
+  <section
+    id="about"
+    class="about">
 
-    <div class="about-logo">
-      <span class="logo-mark">A</span>
+    <div>
 
-      <span>
-        Akash<span class="pink">Ruru</span>
-      </span>
+      <small>✦ OUR LITTLE CORNER</small>
+
+      <h2>
+        A home for stories
+        and feelings.
+      </h2>
+
     </div>
 
-    <h2>A little home for stories.</h2>
-
     <p>
-      Stories written with feelings, memories and imagination.
-      Read something that touches your heart.
+      AkashRuru is a little corner of the internet
+      created for stories, emotions and imagination.
+      Read slowly. Feel deeply. Remember the words.
     </p>
-
-    <button id="submitStoryBtn" class="btn">
-      ✍️ Submit Your Story
-    </button>
 
   </section>
 
@@ -210,97 +368,50 @@
 
 <!-- STORY READER -->
 
-<div id="reader" class="reader">
+<div
+  id="reader"
+  class="reader">
 
   <div class="reader-box">
 
     <button
-      class="close"
+      class="close-reader"
       onclick="closeReader()">
       ×
     </button>
 
 
-    <div id="readerProgress"
-         class="reader-progress">
-    </div>
+    <div
+      id="readerImageWrap"
+      class="reader-image-wrap">
 
-
-    <img
-      id="readerImage"
-      class="reader-image"
-      alt="Story image"
-    >
-
-
-    <small id="rc"></small>
-
-    <h2 id="rt"></h2>
-
-
-    <div class="reader-tools">
-
-      <button id="likeBtn">
-        ❤️ <span id="readerLikes">0</span>
-      </button>
-
-      <button id="bookmarkBtn">
-        🔖 Bookmark
-      </button>
-
-      <button id="shareBtn">
-        🔗 Share
-      </button>
-
-      <button id="fontMinus">
-        A-
-      </button>
-
-      <button id="fontPlus">
-        A+
-      </button>
+      <img
+        id="readerImage"
+        alt="Story cover">
 
     </div>
 
 
-    <div class="reader-line"></div>
+    <div class="reader-content">
 
+      <small id="rc"></small>
 
-    <p id="rb"></p>
+      <h2 id="rt"></h2>
 
+      <div class="reading-line">
+        <span id="readingProgress"></span>
+      </div>
 
-    <!-- COMMENTS -->
+      <p id="rb"></p>
 
-    <section class="comments">
-
-      <h3>
-        💬 Comments
-      </h3>
-
-      <input
-        id="commentName"
-        placeholder="Your name"
-      >
-
-      <textarea
-        id="commentText"
-        placeholder="Write a comment..."
-      ></textarea>
-
-      <button
-        id="commentBtn"
-        class="btn">
-        Post Comment
-      </button>
-
-      <div id="commentsList"></div>
-
-    </section>
+    </div>
 
   </div>
 
 </div>
 
+
+<!-- FOOTER -->
 
 <footer>
 
@@ -309,8 +420,17 @@
   </div>
 
   <p>
-    Stories • Feelings • Memories
+    Stories that stay with you. ♥
   </p>
+
+  <div class="footer-links">
+
+    <a href="#stories">Stories</a>
+    <a href="#music">Music</a>
+    <a href="#about">About</a>
+    <a href="admin.html">Admin</a>
+
+  </div>
 
   <small>
     © <span id="year"></span> AkashRuru Stories

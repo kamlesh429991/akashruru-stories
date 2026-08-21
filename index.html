@@ -6,17 +6,15 @@
 
   <title>AkashRuru Stories — Stories That Stay With You</title>
 
-  <meta
-    name="description"
-    content="AkashRuru Stories — romantic, sad, horror, friendship and emotional stories."
-  >
+  <meta name="description"
+    content="AkashRuru Stories — romantic, sad, horror, friendship and emotional stories.">
 
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- PAGE LOADER -->
+<!-- ================= LOADER ================= -->
 
 <div id="loader">
   <div class="loader-logo">
@@ -29,7 +27,9 @@
 </div>
 
 
-<!-- FLOATING PARTICLES -->
+<!-- ================= ATMOSPHERE ================= -->
+
+<div id="atmosphere" aria-hidden="true"></div>
 
 <div class="particles" aria-hidden="true">
   <i></i><i></i><i></i><i></i><i></i>
@@ -38,7 +38,7 @@
 </div>
 
 
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
 
 <header>
 
@@ -70,7 +70,7 @@
   </nav>
 
 
-  <!-- HERO -->
+  <!-- ================= HERO ================= -->
 
   <section class="hero">
 
@@ -90,19 +90,22 @@
       Read something beautiful, emotional or unforgettable.
     </p>
 
-
     <div class="hero-buttons">
 
-      <a
-        class="btn primary"
-        href="#stories">
+      <a class="btn primary" href="#stories">
         Explore Stories
       </a>
 
+      <button class="btn ghost" onclick="surpriseMe()">
+        🎲 Surprise Me
+      </button>
+
       <button
         class="btn ghost"
-        onclick="surpriseMe()">
-        🎲 Surprise Me
+        id="continueBtn"
+        onclick="continueReading()"
+        style="display:none;">
+        📖 Continue Reading
       </button>
 
     </div>
@@ -132,12 +135,12 @@
 </header>
 
 
-<!-- MAIN -->
+<!-- ================= MAIN ================= -->
 
 <main>
 
 
-  <!-- FEATURED -->
+  <!-- ================= FEATURED ================= -->
 
   <section class="featured">
 
@@ -162,7 +165,7 @@
   </section>
 
 
-  <!-- STORIES -->
+  <!-- ================= STORIES ================= -->
 
   <section id="stories">
 
@@ -176,9 +179,9 @@
     </div>
 
 
-    <div
-      id="filters"
-      class="filters">
+    <!-- FILTERS -->
+
+    <div id="filters" class="filters">
 
       <button class="on" data-c="All">
         All
@@ -207,6 +210,8 @@
     </div>
 
 
+    <!-- SEARCH -->
+
     <div class="search-wrap">
 
       <span>⌕</span>
@@ -220,19 +225,44 @@
     </div>
 
 
+    <!-- CONTINUE CARD -->
+
     <div
-      id="grid"
-      class="grid">
+      id="continueCard"
+      class="continue-card"
+      style="display:none;">
+
+      <div>
+        <small>✦ PICK UP WHERE YOU LEFT OFF</small>
+        <h3 id="continueTitle">
+          Continue reading
+        </h3>
+
+        <div class="continue-progress">
+          <span id="continueProgress"></span>
+        </div>
+
+      </div>
+
+      <button
+        class="btn primary"
+        onclick="continueReading()">
+        Continue →
+      </button>
+
     </div>
+
+
+    <!-- STORY GRID -->
+
+    <div id="grid" class="grid"></div>
 
   </section>
 
 
-  <!-- MUSIC -->
+  <!-- ================= MUSIC ================= -->
 
-  <section
-    id="music"
-    class="music-section">
+  <section id="music" class="music-section">
 
     <div class="music-glow"></div>
 
@@ -253,8 +283,6 @@
     </div>
 
 
-    <!-- MUSIC MOODS -->
-
     <div class="music-moods">
 
       <button
@@ -264,10 +292,7 @@
         onclick="setMood('romantic')">
 
         ❤️
-
-        <span>
-          Romantic
-        </span>
+        <span>Romantic</span>
 
       </button>
 
@@ -279,10 +304,7 @@
         onclick="setMood('sad')">
 
         💔
-
-        <span>
-          Sad
-        </span>
+        <span>Sad</span>
 
       </button>
 
@@ -294,10 +316,7 @@
         onclick="setMood('horror')">
 
         👻
-
-        <span>
-          Horror
-        </span>
+        <span>Horror</span>
 
       </button>
 
@@ -309,17 +328,12 @@
         onclick="setMood('calm')">
 
         🌙
-
-        <span>
-          Calm
-        </span>
+        <span>Calm</span>
 
       </button>
 
     </div>
 
-
-    <!-- MUSIC PLAYER -->
 
     <div class="music-player">
 
@@ -330,9 +344,7 @@
 
       <div class="track-info">
 
-        <small>
-          NOW PLAYING
-        </small>
+        <small>NOW PLAYING</small>
 
         <h3 id="trackName">
           Choose a mood
@@ -347,12 +359,9 @@
 
       <div class="music-controls">
 
-        <button
-          type="button"
-          id="prevMusic">
+        <button type="button" id="prevMusic">
           ⏮
         </button>
-
 
         <button
           type="button"
@@ -361,10 +370,7 @@
           ▶
         </button>
 
-
-        <button
-          type="button"
-          id="nextMusic">
+        <button type="button" id="nextMusic">
           ⏭
         </button>
 
@@ -373,25 +379,18 @@
     </div>
 
 
-    <audio
-      id="audio"
-      preload="none">
-    </audio>
+    <audio id="audio" preload="none"></audio>
 
   </section>
 
 
-  <!-- ABOUT -->
+  <!-- ================= ABOUT ================= -->
 
-  <section
-    id="about"
-    class="about">
+  <section id="about" class="about">
 
     <div>
 
-      <small>
-        ✦ OUR LITTLE CORNER
-      </small>
+      <small>✦ OUR LITTLE CORNER</small>
 
       <h2>
         A home for stories
@@ -411,20 +410,41 @@
 </main>
 
 
-<!-- STORY READER -->
+<!-- ================= CINEMATIC READER ================= -->
 
-<div
-  id="reader"
-  class="reader">
+<div id="reader" class="reader">
 
   <div class="reader-box">
 
     <button
       class="close-reader"
-      onclick="closeReader()">
+      onclick="closeReader()"
+      aria-label="Close reader">
       ×
     </button>
 
+
+    <!-- READER TOP -->
+
+    <div class="reader-topbar">
+
+      <button
+        id="bookmarkBtn"
+        class="reader-tool"
+        onclick="toggleBookmark()">
+        ♡
+      </button>
+
+      <button
+        class="reader-tool"
+        onclick="toggleFullscreenReader()">
+        ⛶
+      </button>
+
+    </div>
+
+
+    <!-- STORY IMAGE -->
 
     <div
       id="readerImageWrap"
@@ -437,17 +457,103 @@
     </div>
 
 
+    <!-- READING PROGRESS -->
+
+    <div class="reader-progress">
+
+      <span id="readingProgress"></span>
+
+    </div>
+
+
+    <!-- CONTENT -->
+
     <div class="reader-content">
 
       <small id="rc"></small>
 
       <h2 id="rt"></h2>
 
-      <div class="reading-line">
-        <span id="readingProgress"></span>
+
+      <!-- STORY META -->
+
+      <div class="reader-meta">
+
+        <span id="readerPercent">
+          0% read
+        </span>
+
+        <span id="readerBookmarkStatus">
+          ♡ Not bookmarked
+        </span>
+
       </div>
 
+
       <p id="rb"></p>
+
+
+      <!-- REACTIONS -->
+
+      <div class="story-reactions">
+
+        <small>
+          HOW DID THIS STORY MAKE YOU FEEL?
+        </small>
+
+        <div class="reaction-buttons">
+
+          <button
+            data-reaction="love"
+            onclick="reactToStory('love')">
+            ❤️
+            <span id="reaction-love">0</span>
+          </button>
+
+          <button
+            data-reaction="sad"
+            onclick="reactToStory('sad')">
+            😢
+            <span id="reaction-sad">0</span>
+          </button>
+
+          <button
+            data-reaction="shock"
+            onclick="reactToStory('shock')">
+            😱
+            <span id="reaction-shock">0</span>
+          </button>
+
+          <button
+            data-reaction="wow"
+            onclick="reactToStory('wow')">
+            😮
+            <span id="reaction-wow">0</span>
+          </button>
+
+        </div>
+
+      </div>
+
+
+      <!-- READER ACTIONS -->
+
+      <div class="reader-actions">
+
+        <button
+          class="btn ghost"
+          onclick="toggleBookmark()"
+          id="readerBookmarkAction">
+          ♡ Save Story
+        </button>
+
+        <button
+          class="btn primary"
+          onclick="closeReader()">
+          Done Reading
+        </button>
+
+      </div>
 
     </div>
 
@@ -456,7 +562,7 @@
 </div>
 
 
-<!-- FOOTER -->
+<!-- ================= FOOTER ================= -->
 
 <footer>
 
@@ -484,11 +590,11 @@
 </footer>
 
 
-<!-- SUPABASE -->
+<!-- ================= SUPABASE ================= -->
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- APP -->
+<!-- ================= APP ================= -->
 
 <script src="app.js"></script>
 

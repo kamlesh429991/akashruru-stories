@@ -1,10 +1,14 @@
 const SUPABASE_URL = "https://bxgtcnagqjtfbsztgnmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
 
-const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
 
 let stories = [];
 let category = "All";
+let currentStory = null;
 
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
@@ -12,7 +16,7 @@ const audio = document.getElementById("audio");
 
 
 /* =========================
-   HELPER
+   SECURITY
 ========================= */
 
 function escapeHTML(text) {
@@ -29,10 +33,50 @@ function escapeHTML(text) {
 
 
 /* =========================
+   LOCAL STORAGE
+========================= */
+
+function getFavorites() {
+  return JSON.parse(
+    localStorage.getItem("akashruru_favorites") || "[]"
+  );
+}
+
+function saveFavorites(data) {
+  localStorage.setItem(
+    "akashruru_favorites",
+    JSON.stringify(data)
+  );
+}
+
+function getBookmarks() {
+  return JSON.parse(
+    localStorage.getItem("akashruru_bookmarks") || "[]"
+  );
+}
+
+function saveBookmarks(data) {
+  localStorage.setItem(
+    "akashruru_bookmarks",
+    JSON.stringify(data)
+  );
+}
+
+
+/* =========================
    LOAD STORIES
 ========================= */
 
 async function loadStories() {
+
+  if (!grid) return;
+
+  grid.innerHTML = `
+    <div class="empty">
+      <h3>Loading stories...</h3>
+      <p>Please wait.</p>
+    </div>
+  `;
 
   const { data, error } = await supabaseClient
     .from("stories")
@@ -42,12 +86,15 @@ async function loadStories() {
     });
 
   if (error) {
+
     console.error(error);
 
-    if (grid) {
-      grid.innerHTML =
-        "<p>Stories load nahi ho paayi.</p>";
-    }
+    grid.innerHTML = `
+      <div class="empty">
+        <h3>Stories load nahi ho paayi.</h3>
+        <p>Please refresh the page.</p>
+      </div>
+    `;
 
     return;
   }
@@ -76,7 +123,7 @@ function updateStoryCount() {
 
 
 /* =========================
-   STORIES
+   RENDER STORIES
 ========================= */
 
 function render() {
@@ -88,25 +135,28 @@ function render() {
       ? search.value.toLowerCase().trim()
       : "";
 
-  const filtered =
-    stories.filter(function (story) {
+  const favorites = getFavorites();
+  const bookmarks = getBookmarks();
 
-      const title =
-        String(story.title || "").toLowerCase();
+  const filtered = stories.filter(function (story) {
 
-      const body =
-        String(story.body || "").toLowerCase();
+    const title =
+      String(story.title || "").toLowerCase();
 
-      return (
-        (category === "All" ||
-          story.category === category) &&
-        (
-          !query ||
-          title.includes(query) ||
-          body.includes(query)
-        )
-      );
-    });
+    const body =
+      String(story.body || "").toLowerCase();
+
+    const matchesCategory =
+      category === "All" ||
+      story.category === category;
+
+    const matchesSearch =
+      !query ||
+      title.includes(query) ||
+      body.includes(query);
+
+    return matchesCategory && matchesSearch;
+  });
 
 
   if (!filtered.length) {
@@ -124,6 +174,12 @@ function render() {
 
   grid.innerHTML =
     filtered.map(function (story) {
+
+      const isFavorite =
+        favorites.includes(String(story.id));
+
+      const isBookmark =
+        bookmarks.includes(String(story.id));
 
       const image =
         story.image_url
@@ -146,7 +202,8 @@ function render() {
       return `
         <article
           class="card"
-          onclick="openReader('${story.id}')">
+          data-story-id="${escapeHTML(story.id)}"
+          onclick="openReader('${escapeHTML(story.id)}')">
 
           ${image}
 
@@ -162,9 +219,53 @@ function render() {
             ${escapeHTML(story.body)}
           </p>
 
-          <span class="read">
-            Read story →
-          </span>
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            margin-top:12px;
+          ">
+
+            <span class="read">
+              Read story →
+            </span>
+
+            <div style="
+              display:flex;
+              gap:7px;
+            ">
+
+              <button
+                type="button"
+                onclick="event.stopPropagation();toggleFavorite('${escapeHTML(story.id)}')"
+                aria-label="Favorite"
+                style="
+                  border:0;
+                  background:transparent;
+                  color:${isFavorite ? "#ff79b7" : "#8f818d"};
+                  font-size:20px;
+                  cursor:pointer;
+                ">
+                ${isFavorite ? "♥" : "♡"}
+              </button>
+
+              <button
+                type="button"
+                onclick="event.stopPropagation();toggleBookmark('${escapeHTML(story.id)}')"
+                aria-label="Bookmark"
+                style="
+                  border:0;
+                  background:transparent;
+                  color:${isBookmark ? "#ff79b7" : "#8f818d"};
+                  font-size:18px;
+                  cursor:pointer;
+                ">
+                ${isBookmark ? "🔖" : "🏷"}
+              </button>
+
+            </div>
+
+          </div>
 
         </article>
       `;
@@ -202,7 +303,7 @@ function renderFeatured() {
       return `
         <article
           class="featured-card"
-          onclick="openReader('${story.id}')">
+          onclick="openReader('${escapeHTML(story.id)}')">
 
           <small>
             ${escapeHTML(story.category)}
@@ -228,6 +329,126 @@ function renderFeatured() {
 
 
 /* =========================
+   FAVORITES
+========================= */
+
+function toggleFavorite(id) {
+
+  id = String(id);
+
+  let favorites = getFavorites();
+
+  if (favorites.includes(id)) {
+
+    favorites =
+      favorites.filter(function (x) {
+        return x !== id;
+      });
+
+    showToast("Removed from favorites");
+
+  } else {
+
+    favorites.push(id);
+
+    showToast("❤️ Added to favorites");
+  }
+
+  saveFavorites(favorites);
+
+  render();
+}
+
+
+/* =========================
+   BOOKMARK
+========================= */
+
+function toggleBookmark(id) {
+
+  id = String(id);
+
+  let bookmarks = getBookmarks();
+
+  if (bookmarks.includes(id)) {
+
+    bookmarks =
+      bookmarks.filter(function (x) {
+        return x !== id;
+      });
+
+    showToast("Bookmark removed");
+
+  } else {
+
+    bookmarks.push(id);
+
+    showToast("🔖 Story bookmarked");
+  }
+
+  saveBookmarks(bookmarks);
+
+  render();
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message) {
+
+  let toast =
+    document.getElementById("akashToast");
+
+  if (!toast) {
+
+    toast =
+      document.createElement("div");
+
+    toast.id =
+      "akashToast";
+
+    toast.style.cssText = `
+      position:fixed;
+      left:50%;
+      bottom:30px;
+      transform:translateX(-50%);
+      background:#17101b;
+      color:#fff;
+      border:1px solid #54384d;
+      padding:12px 18px;
+      border-radius:30px;
+      z-index:99999;
+      font:13px Arial,sans-serif;
+      box-shadow:0 15px 50px rgba(0,0,0,.5);
+      transition:.3s;
+    `;
+
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent =
+    message;
+
+  toast.style.opacity =
+    "1";
+
+  clearTimeout(
+    window.toastTimer
+  );
+
+  window.toastTimer =
+    setTimeout(function () {
+
+      toast.style.opacity =
+        "0";
+
+    }, 1800);
+}
+
+
+/* =========================
    FILTERS
 ========================= */
 
@@ -248,7 +469,7 @@ document
         button.classList.add("on");
 
         category =
-          button.dataset.c;
+          button.dataset.c || "All";
 
         render();
       }
@@ -285,6 +506,9 @@ function openReader(id) {
     });
 
   if (!story) return;
+
+  currentStory =
+    story;
 
 
   const rc =
@@ -340,7 +564,6 @@ function openReader(id) {
     if (imageWrap) {
       imageWrap.classList.remove("show");
     }
-
   }
 
 
@@ -355,10 +578,21 @@ function openReader(id) {
 
   document.body.style.overflow =
     "hidden";
+
+
+  updateReadingProgress();
+
+  restoreReadingPosition();
 }
 
 
+/* =========================
+   CLOSE READER
+========================= */
+
 function closeReader() {
+
+  saveReadingPosition();
 
   const reader =
     document.getElementById("reader");
@@ -373,6 +607,110 @@ function closeReader() {
 
 
 /* =========================
+   READING POSITION
+========================= */
+
+function saveReadingPosition() {
+
+  if (!currentStory) return;
+
+  const readerBox =
+    document.querySelector(".reader-box");
+
+  if (!readerBox) return;
+
+  localStorage.setItem(
+    "reading_" + currentStory.id,
+    readerBox.scrollTop
+  );
+}
+
+
+function restoreReadingPosition() {
+
+  if (!currentStory) return;
+
+  const readerBox =
+    document.querySelector(".reader-box");
+
+  if (!readerBox) return;
+
+  const saved =
+    localStorage.getItem(
+      "reading_" + currentStory.id
+    );
+
+  setTimeout(function () {
+
+    readerBox.scrollTop =
+      saved ? Number(saved) : 0;
+
+    updateReadingProgress();
+
+  }, 50);
+}
+
+
+/* =========================
+   READING PROGRESS
+========================= */
+
+function updateReadingProgress() {
+
+  const readerBox =
+    document.querySelector(".reader-box");
+
+  const bar =
+    document.getElementById("readingProgress");
+
+  if (!readerBox || !bar) return;
+
+  const max =
+    readerBox.scrollHeight -
+    readerBox.clientHeight;
+
+  if (max <= 0) {
+
+    bar.style.width =
+      "100%";
+
+    return;
+  }
+
+  const percentage =
+    (readerBox.scrollTop / max) * 100;
+
+  bar.style.width =
+    Math.min(100, Math.max(0, percentage)) + "%";
+}
+
+
+const readerBox =
+  document.querySelector(".reader-box");
+
+if (readerBox) {
+
+  readerBox.addEventListener(
+    "scroll",
+    function () {
+
+      updateReadingProgress();
+
+      clearTimeout(
+        window.readingSaveTimer
+      );
+
+      window.readingSaveTimer =
+        setTimeout(
+          saveReadingPosition,
+          300
+        );
+    }
+  );
+}
+
+
+/* =========================
    SURPRISE ME
 ========================= */
 
@@ -380,7 +718,7 @@ function surpriseMe() {
 
   if (!stories.length) {
 
-    alert(
+    showToast(
       "Abhi koi story available nahi hai."
     );
 
@@ -394,11 +732,9 @@ function surpriseMe() {
     );
 
 
-  const randomStory =
-    stories[randomIndex];
-
-
-  openReader(randomStory.id);
+  openReader(
+    stories[randomIndex].id
+  );
 }
 
 
@@ -533,38 +869,18 @@ function loadMusic() {
 
 function playMusic() {
 
-  const player =
-    document.getElementById("audio");
-
-  const button =
-    document.getElementById("playMusic");
+  if (!audio) return;
 
 
-  if (!player) {
-    alert("Audio player nahi mila.");
-    return;
-  }
+  if (audio.paused) {
 
-
-  const tracks =
-    musicTracks[currentMood] || [];
-
-
-  if (!tracks.length ||
-      !tracks[currentTrack].url) {
-
-    alert(
-      "Is mood ka music available nahi hai."
-    );
-
-    return;
-  }
-
-
-  if (player.paused) {
-
-    player.play()
+    audio.play()
       .then(function () {
+
+        const button =
+          document.getElementById(
+            "playMusic"
+          );
 
         if (button) {
           button.textContent =
@@ -579,7 +895,7 @@ function playMusic() {
           error
         );
 
-        alert(
+        showToast(
           "Music play nahi hua."
         );
 
@@ -587,7 +903,12 @@ function playMusic() {
 
   } else {
 
-    player.pause();
+    audio.pause();
+
+    const button =
+      document.getElementById(
+        "playMusic"
+      );
 
     if (button) {
       button.textContent =
@@ -598,7 +919,7 @@ function playMusic() {
 
 
 /* =========================
-   NEXT
+   NEXT MUSIC
 ========================= */
 
 function nextMusic() {
@@ -620,7 +941,7 @@ function nextMusic() {
 
 
 /* =========================
-   PREVIOUS
+   PREVIOUS MUSIC
 ========================= */
 
 function previousMusic() {
@@ -670,7 +991,6 @@ document
 const playButton =
   document.getElementById("playMusic");
 
-
 if (playButton) {
 
   playButton.addEventListener(
@@ -684,7 +1004,6 @@ if (playButton) {
 const nextButton =
   document.getElementById("nextMusic");
 
-
 if (nextButton) {
 
   nextButton.addEventListener(
@@ -697,7 +1016,6 @@ if (nextButton) {
 
 const previousButton =
   document.getElementById("prevMusic");
-
 
 if (previousButton) {
 
@@ -772,7 +1090,6 @@ if (audio) {
 const menuBtn =
   document.getElementById("menuBtn");
 
-
 if (menuBtn) {
 
   menuBtn.addEventListener(
@@ -785,11 +1102,9 @@ if (menuBtn) {
         );
 
       if (nav) {
-
         nav.classList.toggle(
           "open"
         );
-
       }
 
     }
@@ -804,7 +1119,6 @@ if (menuBtn) {
 
 const reader =
   document.getElementById("reader");
-
 
 if (reader) {
 
@@ -844,7 +1158,6 @@ document.addEventListener(
 
 const year =
   document.getElementById("year");
-
 
 if (year) {
 

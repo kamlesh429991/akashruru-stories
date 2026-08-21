@@ -1,18 +1,37 @@
 const SUPABASE_URL = "https://bxgtcnagqjtfbsztgnmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
 
-const supabaseClient = supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
+const supabaseClient =
+  supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 let stories = [];
 let category = "All";
 let currentStory = null;
+let currentMood = "romantic";
+let currentTrack = 0;
 
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
 const audio = document.getElementById("audio");
+
+const musicTracks = {
+  romantic: [{
+    name: "Romantic Piano",
+    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
+  }],
+  sad: [{
+    name: "Sad Piano",
+    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
+  }],
+  horror: [{
+    name: "Horror Ambience",
+    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
+  }],
+  calm: [{
+    name: "Calm Night",
+    url: "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
+  }]
+};
 
 
 /* =========================
@@ -20,15 +39,13 @@ const audio = document.getElementById("audio");
 ========================= */
 
 function escapeHTML(text) {
-  return String(text || "").replace(/[&<>"']/g, function (m) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[m];
-  });
+  return String(text || "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
 }
 
 
@@ -37,29 +54,89 @@ function escapeHTML(text) {
 ========================= */
 
 function getFavorites() {
-  return JSON.parse(
-    localStorage.getItem("akashruru_favorites") || "[]"
-  );
+  try {
+    return JSON.parse(
+      localStorage.getItem("akashruru_favorites") || "[]"
+    );
+  } catch {
+    return [];
+  }
 }
 
-function saveFavorites(data) {
+function saveFavorites(list) {
   localStorage.setItem(
     "akashruru_favorites",
-    JSON.stringify(data)
+    JSON.stringify(list)
   );
 }
 
-function getBookmarks() {
-  return JSON.parse(
-    localStorage.getItem("akashruru_bookmarks") || "[]"
-  );
+function isFavorite(id) {
+  return getFavorites().includes(String(id));
 }
 
-function saveBookmarks(data) {
-  localStorage.setItem(
-    "akashruru_bookmarks",
-    JSON.stringify(data)
-  );
+function toggleFavorite(id) {
+
+  const sid = String(id);
+  let list = getFavorites();
+
+  if (list.includes(sid)) {
+    list = list.filter(x => x !== sid);
+    showToast("Removed from favorites");
+  } else {
+    list.push(sid);
+    showToast("❤️ Added to favorites");
+  }
+
+  saveFavorites(list);
+
+  render();
+}
+
+
+/* =========================
+   TOAST
+========================= */
+
+function showToast(message) {
+
+  let toast = document.getElementById("toast");
+
+  if (!toast) {
+
+    toast = document.createElement("div");
+    toast.id = "toast";
+
+    Object.assign(toast.style, {
+      position: "fixed",
+      left: "50%",
+      bottom: "30px",
+      transform: "translateX(-50%) translateY(20px)",
+      padding: "13px 20px",
+      borderRadius: "30px",
+      background: "#ff79b7",
+      color: "#240918",
+      font: "700 13px Arial",
+      zIndex: "99999",
+      opacity: "0",
+      transition: ".3s",
+      pointerEvents: "none"
+    });
+
+    document.body.appendChild(toast);
+  }
+
+  toast.textContent = message;
+  toast.style.opacity = "1";
+  toast.style.transform =
+    "translateX(-50%) translateY(0)";
+
+  clearTimeout(window.toastTimer);
+
+  window.toastTimer = setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform =
+      "translateX(-50%) translateY(20px)";
+  }, 1800);
 }
 
 
@@ -69,14 +146,10 @@ function saveBookmarks(data) {
 
 async function loadStories() {
 
-  if (!grid) return;
-
-  grid.innerHTML = `
-    <div class="empty">
-      <h3>Loading stories...</h3>
-      <p>Please wait.</p>
-    </div>
-  `;
+  if (grid) {
+    grid.innerHTML =
+      `<div class="empty"><p>Loading stories...</p></div>`;
+  }
 
   const { data, error } = await supabaseClient
     .from("stories")
@@ -89,12 +162,13 @@ async function loadStories() {
 
     console.error(error);
 
-    grid.innerHTML = `
-      <div class="empty">
-        <h3>Stories load nahi ho paayi.</h3>
-        <p>Please refresh the page.</p>
-      </div>
-    `;
+    if (grid) {
+      grid.innerHTML =
+        `<div class="empty">
+          <h3>Stories load nahi ho paayi.</h3>
+          <p>Please try again.</p>
+        </div>`;
+    }
 
     return;
   }
@@ -117,34 +191,64 @@ function updateStoryCount() {
     document.getElementById("storyCount");
 
   if (counter) {
-    counter.textContent = stories.length;
+    animateNumber(
+      counter,
+      stories.length
+    );
   }
+}
+
+function animateNumber(element, target) {
+
+  const duration = 700;
+  const start = performance.now();
+
+  function step(now) {
+
+    const progress =
+      Math.min(
+        (now - start) / duration,
+        1
+      );
+
+    const value =
+      Math.floor(
+        target * (1 - Math.pow(1 - progress, 3))
+      );
+
+    element.textContent = value;
+
+    if (progress < 1) {
+      requestAnimationFrame(step);
+    }
+  }
+
+  requestAnimationFrame(step);
 }
 
 
 /* =========================
-   RENDER STORIES
+   GET FILTERED STORIES
 ========================= */
 
-function render() {
-
-  if (!grid) return;
+function getFilteredStories() {
 
   const query =
     search
       ? search.value.toLowerCase().trim()
       : "";
 
-  const favorites = getFavorites();
-  const bookmarks = getBookmarks();
-
-  const filtered = stories.filter(function (story) {
+  return stories.filter(story => {
 
     const title =
       String(story.title || "").toLowerCase();
 
     const body =
-      String(story.body || "").toLowerCase();
+      String(
+        story.body ||
+        story.content ||
+        ""
+      ).toLowerCase();
 
     const matchesCategory =
       category === "All" ||
@@ -157,7 +261,19 @@ function render() {
 
     return matchesCategory && matchesSearch;
   });
+}
 
+
+/* =========================
+   RENDER STORIES
+========================= */
+
+function render() {
+
+  if (!grid) return;
+
+  const filtered =
+    getFilteredStories();
 
   if (!filtered.length) {
 
@@ -171,15 +287,8 @@ function render() {
     return;
   }
 
-
   grid.innerHTML =
-    filtered.map(function (story) {
-
-      const isFavorite =
-        favorites.includes(String(story.id));
-
-      const isBookmark =
-        bookmarks.includes(String(story.id));
+    filtered.map(story => {
 
       const image =
         story.image_url
@@ -187,6 +296,7 @@ function render() {
             <img
               src="${escapeHTML(story.image_url)}"
               alt="${escapeHTML(story.title)}"
+              loading="lazy"
               style="
                 width:100%;
                 height:160px;
@@ -198,79 +308,76 @@ function render() {
           `
           : "";
 
+      const favorite =
+        isFavorite(story.id)
+          ? "♥"
+          : "♡";
 
       return `
         <article
           class="card"
-          data-story-id="${escapeHTML(story.id)}"
-          onclick="openReader('${escapeHTML(story.id)}')">
+          data-story-id="${escapeHTML(story.id)}">
 
           ${image}
 
-          <small>
-            ${escapeHTML(story.category)}
-          </small>
+          <div style="
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            gap:10px;
+          ">
+
+            <small>
+              ${escapeHTML(story.category)}
+            </small>
+
+            <button
+              type="button"
+              onclick="event.stopPropagation();toggleFavorite('${escapeHTML(story.id)}')"
+              style="
+                background:none;
+                border:0;
+                color:#ff79b7;
+                font-size:25px;
+                cursor:pointer;
+              "
+              aria-label="Favorite">
+              ${favorite}
+            </button>
+
+          </div>
 
           <h3>
             ${escapeHTML(story.title)}
           </h3>
 
           <p>
-            ${escapeHTML(story.body)}
+            ${escapeHTML(
+              story.body ||
+              story.content ||
+              ""
+            )}
           </p>
 
-          <div style="
-            display:flex;
-            justify-content:space-between;
-            align-items:center;
-            margin-top:12px;
-          ">
-
-            <span class="read">
-              Read story →
-            </span>
-
-            <div style="
-              display:flex;
-              gap:7px;
-            ">
-
-              <button
-                type="button"
-                onclick="event.stopPropagation();toggleFavorite('${escapeHTML(story.id)}')"
-                aria-label="Favorite"
-                style="
-                  border:0;
-                  background:transparent;
-                  color:${isFavorite ? "#ff79b7" : "#8f818d"};
-                  font-size:20px;
-                  cursor:pointer;
-                ">
-                ${isFavorite ? "♥" : "♡"}
-              </button>
-
-              <button
-                type="button"
-                onclick="event.stopPropagation();toggleBookmark('${escapeHTML(story.id)}')"
-                aria-label="Bookmark"
-                style="
-                  border:0;
-                  background:transparent;
-                  color:${isBookmark ? "#ff79b7" : "#8f818d"};
-                  font-size:18px;
-                  cursor:pointer;
-                ">
-                ${isBookmark ? "🔖" : "🏷"}
-              </button>
-
-            </div>
-
-          </div>
+          <span class="read">
+            Read story →
+          </span>
 
         </article>
       `;
 
     }).join("");
+
+  document
+    .querySelectorAll(".card[data-story-id]")
+    .forEach(card => {
+
+      card.addEventListener(
+        "click",
+        () => openReader(card.dataset.storyId)
+      );
+
+    });
 }
 
 
@@ -296,155 +403,47 @@ function renderFeatured() {
     return;
   }
 
-
   box.innerHTML =
-    featured.map(function (story) {
+    featured.map(story => `
 
-      return `
-        <article
-          class="featured-card"
-          onclick="openReader('${escapeHTML(story.id)}')">
+      <article
+        class="featured-card"
+        data-featured-id="${escapeHTML(story.id)}">
 
-          <small>
-            ${escapeHTML(story.category)}
-          </small>
+        <small>
+          ${escapeHTML(story.category)}
+        </small>
 
-          <h3>
-            ${escapeHTML(story.title)}
-          </h3>
+        <h3>
+          ${escapeHTML(story.title)}
+        </h3>
 
-          <p>
-            ${escapeHTML(story.body)}
-          </p>
+        <p>
+          ${escapeHTML(
+            story.body ||
+            story.content ||
+            ""
+          )}
+        </p>
 
-          <span class="read">
-            Read story →
-          </span>
+        <span class="read">
+          Read story →
+        </span>
 
-        </article>
-      `;
+      </article>
 
-    }).join("");
-}
+    `).join("");
 
+  document
+    .querySelectorAll("[data-featured-id]")
+    .forEach(card => {
 
-/* =========================
-   FAVORITES
-========================= */
+      card.addEventListener(
+        "click",
+        () => openReader(card.dataset.featuredId)
+      );
 
-function toggleFavorite(id) {
-
-  id = String(id);
-
-  let favorites = getFavorites();
-
-  if (favorites.includes(id)) {
-
-    favorites =
-      favorites.filter(function (x) {
-        return x !== id;
-      });
-
-    showToast("Removed from favorites");
-
-  } else {
-
-    favorites.push(id);
-
-    showToast("❤️ Added to favorites");
-  }
-
-  saveFavorites(favorites);
-
-  render();
-}
-
-
-/* =========================
-   BOOKMARK
-========================= */
-
-function toggleBookmark(id) {
-
-  id = String(id);
-
-  let bookmarks = getBookmarks();
-
-  if (bookmarks.includes(id)) {
-
-    bookmarks =
-      bookmarks.filter(function (x) {
-        return x !== id;
-      });
-
-    showToast("Bookmark removed");
-
-  } else {
-
-    bookmarks.push(id);
-
-    showToast("🔖 Story bookmarked");
-  }
-
-  saveBookmarks(bookmarks);
-
-  render();
-}
-
-
-/* =========================
-   TOAST
-========================= */
-
-function showToast(message) {
-
-  let toast =
-    document.getElementById("akashToast");
-
-  if (!toast) {
-
-    toast =
-      document.createElement("div");
-
-    toast.id =
-      "akashToast";
-
-    toast.style.cssText = `
-      position:fixed;
-      left:50%;
-      bottom:30px;
-      transform:translateX(-50%);
-      background:#17101b;
-      color:#fff;
-      border:1px solid #54384d;
-      padding:12px 18px;
-      border-radius:30px;
-      z-index:99999;
-      font:13px Arial,sans-serif;
-      box-shadow:0 15px 50px rgba(0,0,0,.5);
-      transition:.3s;
-    `;
-
-    document.body.appendChild(toast);
-  }
-
-  toast.textContent =
-    message;
-
-  toast.style.opacity =
-    "1";
-
-  clearTimeout(
-    window.toastTimer
-  );
-
-  window.toastTimer =
-    setTimeout(function () {
-
-      toast.style.opacity =
-        "0";
-
-    }, 1800);
+    });
 }
 
 
@@ -454,17 +453,17 @@ function showToast(message) {
 
 document
   .querySelectorAll("#filters button")
-  .forEach(function (button) {
+  .forEach(button => {
 
     button.addEventListener(
       "click",
-      function () {
+      () => {
 
         document
           .querySelectorAll("#filters button")
-          .forEach(function (b) {
-            b.classList.remove("on");
-          });
+          .forEach(b =>
+            b.classList.remove("on")
+          );
 
         button.classList.add("on");
 
@@ -486,30 +485,26 @@ if (search) {
 
   search.addEventListener(
     "input",
-    function () {
-      render();
-    }
+    render
   );
 
 }
 
 
 /* =========================
-   STORY READER
+   READER
 ========================= */
 
 function openReader(id) {
 
   const story =
-    stories.find(function (s) {
-      return String(s.id) === String(id);
-    });
+    stories.find(
+      s => String(s.id) === String(id)
+    );
 
   if (!story) return;
 
-  currentStory =
-    story;
-
+  currentStory = story;
 
   const rc =
     document.getElementById("rc");
@@ -520,69 +515,65 @@ function openReader(id) {
   const rb =
     document.getElementById("rb");
 
-
-  if (rc) {
+  if (rc)
     rc.textContent =
       story.category || "";
-  }
 
-  if (rt) {
+  if (rt)
     rt.textContent =
       story.title || "";
-  }
 
-  if (rb) {
+  if (rb)
     rb.textContent =
-      story.body || "";
-  }
-
+      story.body ||
+      story.content ||
+      "";
 
   const imageWrap =
-    document.getElementById("readerImageWrap");
+    document.getElementById(
+      "readerImageWrap"
+    );
 
   const image =
-    document.getElementById("readerImage");
-
+    document.getElementById(
+      "readerImage"
+    );
 
   if (story.image_url) {
 
-    if (image) {
+    if (image)
       image.src =
         story.image_url;
-    }
 
-    if (imageWrap) {
+    if (imageWrap)
       imageWrap.classList.add("show");
-    }
 
   } else {
 
-    if (image) {
-      image.src = "";
-    }
+    if (image)
+      image.removeAttribute("src");
 
-    if (imageWrap) {
+    if (imageWrap)
       imageWrap.classList.remove("show");
-    }
   }
-
 
   const reader =
     document.getElementById("reader");
 
-
-  if (reader) {
+  if (reader)
     reader.classList.add("show");
-  }
-
 
   document.body.style.overflow =
     "hidden";
 
+  localStorage.setItem(
+    "akashruru_last_story",
+    String(story.id)
+  );
 
   updateReadingProgress();
 
-  restoreReadingPosition();
+  showToast("📖 Enjoy the story");
 }
 
 
@@ -592,62 +583,13 @@ function openReader(id) {
 
 function closeReader() {
 
-  saveReadingPosition();
-
   const reader =
     document.getElementById("reader");
 
-  if (reader) {
+  if (reader)
     reader.classList.remove("show");
-  }
 
-  document.body.style.overflow =
-    "";
-}
-
-
-/* =========================
-   READING POSITION
-========================= */
-
-function saveReadingPosition() {
-
-  if (!currentStory) return;
-
-  const readerBox =
-    document.querySelector(".reader-box");
-
-  if (!readerBox) return;
-
-  localStorage.setItem(
-    "reading_" + currentStory.id,
-    readerBox.scrollTop
-  );
-}
-
-
-function restoreReadingPosition() {
-
-  if (!currentStory) return;
-
-  const readerBox =
-    document.querySelector(".reader-box");
-
-  if (!readerBox) return;
-
-  const saved =
-    localStorage.getItem(
-      "reading_" + currentStory.id
-    );
-
-  setTimeout(function () {
-
-    readerBox.scrollTop =
-      saved ? Number(saved) : 0;
-
-    updateReadingProgress();
-
-  }, 50);
+  document.body.style.overflow = "";
 }
 
 
@@ -657,57 +599,40 @@ function restoreReadingPosition() {
 
 function updateReadingProgress() {
 
-  const readerBox =
-    document.querySelector(".reader-box");
+  const box =
+    document.querySelector(
+      ".reader-box"
+    );
 
   const bar =
-    document.getElementById("readingProgress");
+    document.getElementById(
+      "readingProgress"
+    );
 
-  if (!readerBox || !bar) return;
+  if (!box || !bar) return;
 
-  const max =
-    readerBox.scrollHeight -
-    readerBox.clientHeight;
+  const scrollTop =
+    box.scrollTop;
 
-  if (max <= 0) {
+  const scrollHeight =
+    box.scrollHeight -
+    box.clientHeight;
 
-    bar.style.width =
-      "100%";
-
-    return;
-  }
-
-  const percentage =
-    (readerBox.scrollTop / max) * 100;
+  const percent =
+    scrollHeight > 0
+      ? (scrollTop / scrollHeight) * 100
+      : 0;
 
   bar.style.width =
-    Math.min(100, Math.max(0, percentage)) + "%";
+    Math.min(100, Math.max(0, percent))
+    + "%";
 }
 
-
-const readerBox =
-  document.querySelector(".reader-box");
-
-if (readerBox) {
-
-  readerBox.addEventListener(
-    "scroll",
-    function () {
-
-      updateReadingProgress();
-
-      clearTimeout(
-        window.readingSaveTimer
-      );
-
-      window.readingSaveTimer =
-        setTimeout(
-          saveReadingPosition,
-          300
-        );
-    }
-  );
-}
+document.addEventListener(
+  "scroll",
+  updateReadingProgress,
+  true
+);
 
 
 /* =========================
@@ -719,75 +644,109 @@ function surpriseMe() {
   if (!stories.length) {
 
     showToast(
-      "Abhi koi story available nahi hai."
+      "No stories available yet."
     );
 
     return;
   }
 
+  const random =
+    stories[
+      Math.floor(
+        Math.random() *
+        stories.length
+      )
+    ];
 
-  const randomIndex =
-    Math.floor(
-      Math.random() * stories.length
-    );
-
-
-  openReader(
-    stories[randomIndex].id
-  );
+  openReader(random.id);
 }
 
 
 /* =========================
-   MUSIC
+   SHARE STORY
 ========================= */
 
-const musicTracks = {
+async function shareCurrentStory() {
 
-  romantic: [
-    {
-      name: "Romantic Piano",
-      url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
-    }
-  ],
+  if (!currentStory) return;
 
-  sad: [
-    {
-      name: "Sad Piano",
-      url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
-    }
-  ],
+  const title =
+    currentStory.title ||
+    "AkashRuru Story";
 
-  horror: [
-    {
-      name: "Horror Ambience",
-      url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
-    }
-  ],
+  const url =
+    window.location.href;
 
-  calm: [
-    {
-      name: "Calm Night",
-      url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
-    }
-  ]
+  if (navigator.share) {
 
-};
+    try {
 
+      await navigator.share({
+        title,
+        text:
+          "Read this story on AkashRuru Stories",
+        url
+      });
 
-let currentMood =
-  "romantic";
+      return;
 
-let currentTrack =
-  0;
+    } catch {}
+  }
+
+  try {
+
+    await navigator.clipboard.writeText(
+      `${title}\n${url}`
+    );
+
+    showToast(
+      "🔗 Story link copied"
+    );
+
+  } catch {
+
+    showToast(
+      "Share not available"
+    );
+  }
+}
 
 
 /* =========================
-   SET MOOD
+   COPY STORY
+========================= */
+
+async function copyCurrentStory() {
+
+  if (!currentStory) return;
+
+  const text =
+    `${currentStory.title}\n\n` +
+    `${currentStory.body ||
+      currentStory.content ||
+      ""}`;
+
+  try {
+
+    await navigator.clipboard.writeText(
+      text
+    );
+
+    showToast(
+      "📋 Story copied"
+    );
+
+  } catch {
+
+    showToast(
+      "Copy failed"
+    );
+  }
+}
+
+
+/* =========================
+   MUSIC MOOD
 ========================= */
 
 function setMood(mood) {
@@ -795,13 +754,11 @@ function setMood(mood) {
   currentMood =
     mood;
 
-  currentTrack =
-    0;
-
+  currentTrack = 0;
 
   document
     .querySelectorAll(".mood")
-    .forEach(function (button) {
+    .forEach(button => {
 
       button.classList.toggle(
         "active",
@@ -809,7 +766,6 @@ function setMood(mood) {
       );
 
     });
-
 
   loadMusic();
 }
@@ -826,20 +782,17 @@ function loadMusic() {
 
   if (!tracks.length) return;
 
-
   const track =
     tracks[currentTrack];
 
-
   const name =
-    document.getElementById("trackName");
+    document.getElementById(
+      "trackName"
+    );
 
-
-  if (name) {
+  if (name)
     name.textContent =
       track.name;
-  }
-
 
   if (audio) {
 
@@ -851,15 +804,21 @@ function loadMusic() {
     audio.load();
   }
 
-
   const play =
-    document.getElementById("playMusic");
+    document.getElementById(
+      "playMusic"
+    );
 
+  if (play)
+    play.textContent = "▶";
 
-  if (play) {
-    play.textContent =
-      "▶";
-  }
+  const bar =
+    document.getElementById(
+      "progressBar"
+    );
+
+  if (bar)
+    bar.style.width = "0%";
 }
 
 
@@ -871,32 +830,24 @@ function playMusic() {
 
   if (!audio) return;
 
-
   if (audio.paused) {
 
     audio.play()
-      .then(function () {
+      .then(() => {
 
         const button =
           document.getElementById(
             "playMusic"
           );
 
-        if (button) {
-          button.textContent =
-            "⏸";
-        }
+        if (button)
+          button.textContent = "⏸";
 
       })
-      .catch(function (error) {
-
-        console.error(
-          "Audio play error:",
-          error
-        );
+      .catch(() => {
 
         showToast(
-          "Music play nahi hua."
+          "Tap again to start music"
         );
 
       });
@@ -910,10 +861,8 @@ function playMusic() {
         "playMusic"
       );
 
-    if (button) {
-      button.textContent =
-        "▶";
-    }
+    if (button)
+      button.textContent = "▶";
   }
 }
 
@@ -927,14 +876,11 @@ function nextMusic() {
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks ||
-      !tracks.length) return;
-
+  if (!tracks?.length) return;
 
   currentTrack =
     (currentTrack + 1) %
     tracks.length;
-
 
   loadMusic();
 }
@@ -949,9 +895,7 @@ function previousMusic() {
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks ||
-      !tracks.length) return;
-
+  if (!tracks?.length) return;
 
   currentTrack =
     (
@@ -961,70 +905,46 @@ function previousMusic() {
     ) %
     tracks.length;
 
-
   loadMusic();
 }
 
 
 /* =========================
-   MUSIC BUTTONS
+   MUSIC EVENTS
 ========================= */
 
 document
   .querySelectorAll(".mood")
-  .forEach(function (button) {
+  .forEach(button => {
 
     button.addEventListener(
       "click",
-      function () {
-
-        setMood(
-          button.dataset.mood
-        );
-
-      }
+      () =>
+        setMood(button.dataset.mood)
     );
 
   });
 
-
-const playButton =
-  document.getElementById("playMusic");
-
-if (playButton) {
-
-  playButton.addEventListener(
+document
+  .getElementById("playMusic")
+  ?.addEventListener(
     "click",
     playMusic
   );
 
-}
-
-
-const nextButton =
-  document.getElementById("nextMusic");
-
-if (nextButton) {
-
-  nextButton.addEventListener(
+document
+  .getElementById("nextMusic")
+  ?.addEventListener(
     "click",
     nextMusic
   );
 
-}
-
-
-const previousButton =
-  document.getElementById("prevMusic");
-
-if (previousButton) {
-
-  previousButton.addEventListener(
+document
+  .getElementById("prevMusic")
+  ?.addEventListener(
     "click",
     previousMusic
   );
-
-}
 
 
 /* =========================
@@ -1035,10 +955,9 @@ if (audio) {
 
   audio.addEventListener(
     "timeupdate",
-    function () {
+    () => {
 
       if (!audio.duration) return;
-
 
       const percentage =
         (
@@ -1046,40 +965,28 @@ if (audio) {
           audio.duration
         ) * 100;
 
-
       const bar =
         document.getElementById(
           "progressBar"
         );
 
-
-      if (bar) {
-
+      if (bar)
         bar.style.width =
           percentage + "%";
-
-      }
-
     }
   );
-
 
   audio.addEventListener(
     "ended",
-    function () {
+    () => {
 
       nextMusic();
 
-      if (audio.src) {
-
-        audio.play()
-          .catch(function () {});
-
-      }
+      audio.play()
+        .catch(() => {});
 
     }
   );
-
 }
 
 
@@ -1087,65 +994,60 @@ if (audio) {
    MOBILE MENU
 ========================= */
 
-const menuBtn =
-  document.getElementById("menuBtn");
-
-if (menuBtn) {
-
-  menuBtn.addEventListener(
+document
+  .getElementById("menuBtn")
+  ?.addEventListener(
     "click",
-    function () {
+    () => {
 
-      const nav =
-        document.querySelector(
-          ".nav-links"
-        );
-
-      if (nav) {
-        nav.classList.toggle(
-          "open"
-        );
-      }
+      document
+        .querySelector(".nav-links")
+        ?.classList.toggle("open");
 
     }
   );
 
-}
-
 
 /* =========================
-   CLOSE READER
+   READER CLOSE
 ========================= */
 
-const reader =
-  document.getElementById("reader");
-
-if (reader) {
-
-  reader.addEventListener(
+document
+  .getElementById("reader")
+  ?.addEventListener(
     "click",
-    function (event) {
+    event => {
 
-      if (event.target === reader) {
+      if (
+        event.target.id === "reader"
+      ) {
         closeReader();
       }
 
     }
   );
 
-}
-
 
 /* =========================
-   ESC
+   KEYBOARD
 ========================= */
 
 document.addEventListener(
   "keydown",
-  function (event) {
+  event => {
 
     if (event.key === "Escape") {
       closeReader();
+    }
+
+    if (
+      event.key === "/" &&
+      document.activeElement !== search
+    ) {
+
+      event.preventDefault();
+
+      search?.focus();
     }
 
   }
@@ -1159,12 +1061,9 @@ document.addEventListener(
 const year =
   document.getElementById("year");
 
-if (year) {
-
+if (year)
   year.textContent =
     new Date().getFullYear();
-
-}
 
 
 /* =========================

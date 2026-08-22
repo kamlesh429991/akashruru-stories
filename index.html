@@ -1,435 +1,703 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
 
-<title>AkashRuru Stories — Stories That Stay With You</title>
+  <title>AkashRuru Stories — Stories That Stay With You</title>
 
-<meta name="description"
-content="AkashRuru Stories — romantic, sad, horror, friendship and emotional stories.">
+  <meta
+    name="description"
+    content="AkashRuru Stories — romantic, sad, horror, friendship and emotional stories."
+  >
 
-<link rel="stylesheet" href="style.css">
+  <meta name="theme-color" content="#08070b">
+
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
-<!-- LOADER -->
+<!-- ================= LOADER ================= -->
+
 <div id="loader">
   <div class="loader-logo">
     Akash<span>Ruru</span>
   </div>
+
   <div class="loader-line"></div>
+
   <small>STORIES • FEELINGS • MEMORIES</small>
 </div>
 
-<!-- PARTICLES -->
+
+<!-- ================= PARTICLES ================= -->
+
 <div class="particles" aria-hidden="true">
   <i></i><i></i><i></i><i></i><i></i><i></i>
   <i></i><i></i><i></i><i></i><i></i><i></i>
+  <i></i><i></i><i></i><i></i>
 </div>
 
-<!-- HEADER -->
+
+<!-- ================= HEADER ================= -->
+
 <header>
 
-<nav>
+  <nav>
 
-<a class="logo" href="#">
-  <span class="logo-a">Akash</span><span>Ruru</span>
-</a>
+    <a class="logo" href="#">
+      <span class="logo-a">Akash</span><span>Ruru</span>
+    </a>
 
-<div class="nav-links">
-  <a href="#stories">Stories</a>
-  <a href="#music">Music</a>
-  <a href="#about">About</a>
-  <a href="admin.html" class="admin">Admin</a>
-</div>
+    <div class="nav-links" id="navLinks">
 
-<button class="menu-btn" id="menuBtn" aria-label="Open menu">
-☰
-</button>
+      <a href="#stories">Stories</a>
+      <a href="#discover">Discover</a>
+      <a href="#music">Music</a>
+      <a href="#about">About</a>
 
-</nav>
+      <button
+        type="button"
+        class="nav-theme"
+        id="themeBtn"
+        title="Change theme">
+        ◐
+      </button>
 
-<section class="hero">
+      <a class="admin" href="admin.html">
+        Admin
+      </a>
 
-<div class="hero-glow"></div>
+    </div>
 
-<small class="eyebrow">
-✦ WORDS • FEELINGS • MEMORIES ✦
-</small>
+    <button
+      class="menu-btn"
+      id="menuBtn"
+      aria-label="Open menu">
+      ☰
+    </button>
 
-<h1>
-Every story
-<em>has a feeling.</em>
-</h1>
+  </nav>
 
-<p>
-Stories for the moments when words are not enough.
-Read something beautiful, emotional or unforgettable.
-</p>
 
-<div class="hero-buttons">
+  <!-- ================= HERO ================= -->
 
-<a class="btn primary" href="#stories">
-Explore Stories
-</a>
+  <section class="hero">
 
-<button class="btn ghost" onclick="surpriseMe()">
-🎲 Surprise Me
-</button>
+    <div class="hero-glow"></div>
 
-</div>
+    <div class="hero-orbit orbit-one"></div>
+    <div class="hero-orbit orbit-two"></div>
 
-<div class="hero-stats">
+    <small class="eyebrow">
+      ✦ WORDS • FEELINGS • MEMORIES ✦
+    </small>
 
-<div>
-<strong id="storyCount">—</strong>
-<span>Stories</span>
-</div>
+    <h1>
+      Every story
+      <em>has a feeling.</em>
+    </h1>
 
-<div>
-<strong>∞</strong>
-<span>Feelings</span>
-</div>
+    <p>
+      Stories for the moments when words are not enough.
+      Read something beautiful, emotional or unforgettable.
+    </p>
 
-<div>
-<strong>♥</strong>
-<span>Memories</span>
-</div>
 
-</div>
+    <div class="hero-buttons">
 
-</section>
+      <a
+        class="btn primary"
+        href="#stories">
+        Explore Stories
+      </a>
+
+      <button
+        class="btn ghost"
+        type="button"
+        onclick="surpriseMe()">
+        🎲 Surprise Me
+      </button>
+
+      <button
+        class="btn ghost"
+        type="button"
+        onclick="openDailyStory()">
+        ✨ Today's Story
+      </button>
+
+    </div>
+
+
+    <div class="hero-stats">
+
+      <div>
+        <strong id="storyCount">—</strong>
+        <span>Stories</span>
+      </div>
+
+      <div>
+        <strong id="readerCount">0</strong>
+        <span>Readers</span>
+      </div>
+
+      <div>
+        <strong>∞</strong>
+        <span>Feelings</span>
+      </div>
+
+      <div>
+        <strong>♥</strong>
+        <span>Memories</span>
+      </div>
+
+    </div>
+
+  </section>
+
 </header>
 
 
+<!-- ================= MAIN ================= -->
+
 <main>
 
-<!-- FEATURED -->
-<section class="featured">
 
-<div class="section-heading">
+  <!-- ================= FEATURED ================= -->
 
-<div>
-<small>✦ HANDPICKED</small>
-<h2>Featured Stories</h2>
-</div>
+  <section class="featured">
 
-<a href="#stories">View all →</a>
+    <div class="section-heading">
 
-</div>
+      <div>
+        <small>✦ HANDPICKED</small>
+        <h2>Featured Stories</h2>
+      </div>
 
-<div id="featuredGrid" class="featured-grid"></div>
+      <a href="#stories">
+        View all →
+      </a>
 
-</section>
+    </div>
 
+    <div
+      id="featuredGrid"
+      class="featured-grid">
+    </div>
 
-<!-- STORIES -->
-<section id="stories">
+  </section>
 
-<div class="section-heading">
 
-<div>
-<small>THE COLLECTION</small>
-<h2>Latest Stories</h2>
-</div>
+  <!-- ================= DISCOVER ================= -->
 
-</div>
+  <section
+    id="discover"
+    class="discover-section">
 
+    <div class="section-heading">
 
-<div id="filters" class="filters">
+      <div>
+        <small>✦ DISCOVER</small>
+        <h2>Find your feeling.</h2>
+      </div>
 
-<button class="on" data-c="All">All</button>
+      <p>
+        Let the mood choose the story.
+      </p>
 
-<button data-c="Romantic">
-❤️ Romantic
-</button>
+    </div>
 
-<button data-c="Sad">
-💔 Sad
-</button>
 
-<button data-c="Horror">
-👻 Horror
-</button>
+    <div class="feeling-grid">
 
-<button data-c="Friendship">
-🤝 Friendship
-</button>
+      <button
+        type="button"
+        class="feeling-card romantic-feeling"
+        onclick="chooseFeeling('Romantic')">
 
-<button data-c="Other">
-✦ Other
-</button>
+        <span class="feeling-icon">❤️</span>
 
-</div>
+        <strong>Love</strong>
 
+        <small>
+          For hearts that still believe.
+        </small>
 
-<div class="search-wrap">
+      </button>
 
-<span>⌕</span>
 
-<input
-id="search"
-class="search"
-placeholder="Search stories..."
-autocomplete="off">
+      <button
+        type="button"
+        class="feeling-card sad-feeling"
+        onclick="chooseFeeling('Sad')">
 
-</div>
+        <span class="feeling-icon">💔</span>
 
+        <strong>Broken</strong>
 
-<div id="grid" class="grid"></div>
+        <small>
+          For feelings left unsaid.
+        </small>
 
-</section>
+      </button>
 
 
-<!-- MUSIC -->
-<section id="music" class="music-section">
+      <button
+        type="button"
+        class="feeling-card horror-feeling"
+        onclick="chooseFeeling('Horror')">
 
-<div class="music-glow"></div>
+        <span class="feeling-icon">👻</span>
 
-<div class="section-heading">
+        <strong>Fear</strong>
 
-<div>
+        <small>
+          For stories that haunt.
+        </small>
 
-<small>✦ MUSIC LOUNGE</small>
+      </button>
 
-<h2>Listen while you read.</h2>
 
-<p>
-Choose a mood and let the music set the atmosphere.
-</p>
+      <button
+        type="button"
+        class="feeling-card friendship-feeling"
+        onclick="chooseFeeling('Friendship')">
 
-</div>
+        <span class="feeling-icon">🤝</span>
 
-</div>
+        <strong>Friendship</strong>
 
+        <small>
+          For people worth remembering.
+        </small>
 
-<div class="music-moods">
+      </button>
 
-<button
-type="button"
-class="mood active"
-data-mood="romantic">
+    </div>
 
-❤️
-<span>Romantic</span>
+  </section>
 
-</button>
 
-<button
-type="button"
-class="mood"
-data-mood="sad">
+  <!-- ================= STORIES ================= -->
 
-💔
-<span>Sad</span>
+  <section id="stories">
 
-</button>
+    <div class="section-heading">
 
-<button
-type="button"
-class="mood"
-data-mood="horror">
+      <div>
+        <small>THE COLLECTION</small>
+        <h2>Latest Stories</h2>
+      </div>
 
-👻
-<span>Horror</span>
+    </div>
 
-</button>
 
-<button
-type="button"
-class="mood"
-data-mood="calm">
+    <!-- FILTERS -->
 
-🌙
-<span>Calm</span>
+    <div
+      id="filters"
+      class="filters">
 
-</button>
+      <button
+        class="on"
+        data-c="All"
+        type="button">
+        All
+      </button>
 
-</div>
+      <button
+        data-c="Romantic"
+        type="button">
+        ❤️ Romantic
+      </button>
 
+      <button
+        data-c="Sad"
+        type="button">
+        💔 Sad
+      </button>
 
-<div class="music-player">
+      <button
+        data-c="Horror"
+        type="button">
+        👻 Horror
+      </button>
 
-<div class="album-art">
-♪ 
-</div>
+      <button
+        data-c="Friendship"
+        type="button">
+        🤝 Friendship
+      </button>
 
-<div class="track-info">
+      <button
+        data-c="Other"
+        type="button">
+        ✦ Other
+      </button>
 
-<small>NOW PLAYING</small>
+    </div>
 
-<h3 id="trackName">
-Choose a mood
-</h3>
 
-<div class="progress">
-<span id="progressBar"></span>
-</div>
+    <!-- SEARCH -->
 
-</div>
+    <div class="search-row">
 
-<div class="music-controls">
+      <div class="search-wrap">
 
-<button
-type="button"
-id="prevMusic">
-⏮
-</button>
+        <span>⌕</span>
 
-<button
-type="button"
-id="playMusic"
-class="play">
-▶
-</button>
+        <input
+          id="search"
+          class="search"
+          type="search"
+          placeholder="Search stories..."
+          autocomplete="off">
 
-<button
-type="button"
-id="nextMusic">
-⏭
-</button>
+      </div>
 
-</div>
+      <button
+        type="button"
+        class="random-btn"
+        onclick="surpriseMe()">
+        🎲 Random
+      </button>
 
-</div>
+    </div>
 
-<audio id="audio" preload="none"></audio>
 
-</section>
+    <!-- STORY GRID -->
 
+    <div
+      id="grid"
+      class="grid">
+    </div>
 
-<!-- ABOUT -->
-<section id="about" class="about">
+  </section>
 
-<div>
 
-<small>
-✦ OUR LITTLE CORNER
-</small>
+  <!-- ================= MEMORY WALL ================= -->
 
-<h2>
-A home for stories
-and feelings.
-</h2>
+  <section class="memory-section">
 
-</div>
+    <div class="section-heading">
 
-<p>
-AkashRuru is a little corner of the internet
-created for stories, emotions and imagination.
-Read slowly. Feel deeply. Remember the words.
-</p>
+      <div>
+        <small>✦ YOUR JOURNEY</small>
+        <h2>Stories you loved.</h2>
+      </div>
 
-</section>
+      <button
+        type="button"
+        class="clear-memory"
+        onclick="clearReadingHistory()">
+        Clear
+      </button>
+
+    </div>
+
+    <div
+      id="memoryGrid"
+      class="memory-grid">
+
+      <div class="memory-empty">
+        <span>♡</span>
+        <p>
+          Read a story and it will appear here.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================= MUSIC ================= -->
+
+  <section
+    id="music"
+    class="music-section">
+
+    <div class="music-glow"></div>
+
+    <div class="section-heading">
+
+      <div>
+
+        <small>✦ MUSIC LOUNGE</small>
+
+        <h2>Listen while you read.</h2>
+
+        <p>
+          Choose a mood and let the music set the atmosphere.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <!-- MUSIC MOODS -->
+
+    <div class="music-moods">
+
+      <button
+        type="button"
+        class="mood active"
+        data-mood="romantic"
+        onclick="setMood('romantic')">
+        ❤️
+        <span>Romantic</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mood"
+        data-mood="sad"
+        onclick="setMood('sad')">
+        💔
+        <span>Sad</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mood"
+        data-mood="horror"
+        onclick="setMood('horror')">
+        👻
+        <span>Horror</span>
+      </button>
+
+
+      <button
+        type="button"
+        class="mood"
+        data-mood="calm"
+        onclick="setMood('calm')">
+        🌙
+        <span>Calm</span>
+      </button>
+
+    </div>
+
+
+    <!-- MUSIC PLAYER -->
+
+    <div class="music-player">
+
+      <div class="album-art">
+        ♪
+      </div>
+
+
+      <div class="track-info">
+
+        <small>
+          NOW PLAYING
+        </small>
+
+        <h3 id="trackName">
+          Choose a mood
+        </h3>
+
+        <div class="progress">
+          <span id="progressBar"></span>
+        </div>
+
+      </div>
+
+
+      <div class="music-controls">
+
+        <button
+          type="button"
+          id="prevMusic">
+          ⏮
+        </button>
+
+        <button
+          type="button"
+          id="playMusic"
+          class="play">
+          ▶
+        </button>
+
+        <button
+          type="button"
+          id="nextMusic">
+          ⏭
+        </button>
+
+      </div>
+
+    </div>
+
+
+    <audio
+      id="audio"
+      preload="none">
+    </audio>
+
+  </section>
+
+
+  <!-- ================= ABOUT ================= -->
+
+  <section
+    id="about"
+    class="about">
+
+    <div>
+
+      <small>
+        ✦ OUR LITTLE CORNER
+      </small>
+
+      <h2>
+        A home for stories
+        and feelings.
+      </h2>
+
+    </div>
+
+    <p>
+      AkashRuru is a little corner of the internet
+      created for stories, emotions and imagination.
+      Read slowly. Feel deeply. Remember the words.
+    </p>
+
+  </section>
 
 </main>
 
 
-<!-- STORY READER -->
-<div id="reader" class="reader">
-
-<div class="reader-box">
-
-<button
-class="close-reader"
-onclick="closeReader()">
-×
-</button>
+<!-- ================= STORY READER ================= -->
 
 <div
-id="readerImageWrap"
-class="reader-image-wrap">
+  id="reader"
+  class="reader"
+  aria-hidden="true">
 
-<img
-id="readerImage"
-alt="Story cover">
+  <div class="reader-box">
+
+    <button
+      class="close-reader"
+      type="button"
+      onclick="closeReader()"
+      aria-label="Close story">
+      ×
+    </button>
+
+
+    <div
+      id="readerImageWrap"
+      class="reader-image-wrap">
+
+      <img
+        id="readerImage"
+        alt="Story cover">
+
+    </div>
+
+
+    <div class="reader-content">
+
+      <small id="rc"></small>
+
+      <h2 id="rt"></h2>
+
+      <div class="reader-meta">
+
+        <span id="readingTime">
+          📖 Reading time
+        </span>
+
+        <button
+          type="button"
+          id="favoriteBtn"
+          onclick="toggleFavorite()">
+          ♡ Save
+        </button>
+
+      </div>
+
+      <div class="reading-line">
+        <span id="readingProgress"></span>
+      </div>
+
+      <p id="rb"></p>
+
+      <div class="reader-bottom">
+
+        <button
+          type="button"
+          class="reader-action"
+          onclick="shareCurrentStory()">
+          ↗ Share
+        </button>
+
+        <button
+          type="button"
+          class="reader-action"
+          onclick="surpriseMe()">
+          🎲 Another story
+        </button>
+
+      </div>
+
+    </div>
+
+  </div>
 
 </div>
 
 
-<div class="reader-content">
+<!-- ================= TOAST ================= -->
 
-<div class="reader-top">
-
-<small id="rc"></small>
-
-<div class="reader-actions">
-
-<button
-type="button"
-onclick="toggleFavorite(currentStory?.id)">
-♥
-</button>
-
-<button
-type="button"
-onclick="shareCurrentStory()">
-↗
-</button>
-
-<button
-type="button"
-onclick="copyCurrentStory()">
-⧉
-</button>
-
-</div>
-
+<div
+  id="toast"
+  class="toast"
+  aria-live="polite">
 </div>
 
 
-<h2 id="rt"></h2>
+<!-- ================= FOOTER ================= -->
 
-<div class="reading-line">
-<span id="readingProgress"></span>
-</div>
-
-<p id="rb"></p>
-
-</div>
-
-</div>
-
-</div>
-
-
-<!-- FOOTER -->
 <footer>
 
-<div class="footer-logo">
-Akash<span>Ruru</span>
-</div>
+  <div class="footer-logo">
+    Akash<span>Ruru</span>
+  </div>
 
-<p>
-Stories that stay with you. ♥
-</p>
+  <p>
+    Stories that stay with you. ♥
+  </p>
 
-<div class="footer-links">
+  <div class="footer-links">
 
-<a href="#stories">Stories</a>
-<a href="#music">Music</a>
-<a href="#about">About</a>
-<a href="admin.html">Admin</a>
+    <a href="#stories">Stories</a>
+    <a href="#discover">Discover</a>
+    <a href="#music">Music</a>
+    <a href="#about">About</a>
+    <a href="admin.html">Admin</a>
 
-</div>
+  </div>
 
-<small>
-© <span id="year"></span> AkashRuru Stories
-</small>
+  <small>
+    © <span id="year"></span> AkashRuru Stories
+  </small>
 
 </footer>
 
 
-<!-- TOAST -->
-<div id="toast"></div>
+<!-- ================= SUPABASE ================= -->
 
-
-<!-- SUPABASE -->
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-<!-- APP -->
+<!-- ================= APP ================= -->
+
 <script src="app.js"></script>
 
 </body>

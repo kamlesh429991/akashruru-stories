@@ -1,3 +1,8 @@
+/* =========================================================
+   AKASHRURU STORIES — APP.JS
+   Cinematic Story Experience
+========================================================= */
+
 const SUPABASE_URL = "https://bxgtcnagqjtfbsztgnmb.supabase.co";
 const SUPABASE_KEY = "sb_publishable_mQVSdlF4xEsVtW6eFt-vcQ_jQUVVY7G";
 
@@ -9,48 +14,249 @@ const supabaseClient = supabase.createClient(
 let stories = [];
 let category = "All";
 let currentStory = null;
-
-/* =========================
-   ELEMENTS
-========================= */
+let currentMood = "romantic";
+let currentTrack = 0;
 
 const grid = document.getElementById("grid");
 const search = document.getElementById("search");
 const audio = document.getElementById("audio");
 
-/* =========================
-   HELPERS
-========================= */
+/* =========================================================
+   SAFE HTML
+========================================================= */
 
 function escapeHTML(text) {
-  return String(text || "").replace(/[&<>"']/g, function (m) {
-    return {
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;"
-    }[m];
-  });
+  return String(text || "").replace(/[&<>"']/g, m => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  }[m]));
 }
 
-function getPreview(text, length = 170) {
-  const clean = String(text || "").replace(/\s+/g, " ").trim();
+/* =========================================================
+   EXTRA UI
+========================================================= */
 
-  if (clean.length <= length) return clean;
+function createExtraUI() {
 
-  return clean.substring(0, length) + "...";
+  if (!document.getElementById("ar-toast")) {
+    const toast = document.createElement("div");
+    toast.id = "ar-toast";
+    toast.style.cssText = `
+      position:fixed;
+      left:50%;
+      bottom:25px;
+      transform:translate(-50%,20px);
+      opacity:0;
+      z-index:10000;
+      padding:13px 20px;
+      border-radius:30px;
+      background:rgba(20,14,24,.94);
+      color:#fff;
+      border:1px solid rgba(255,121,183,.35);
+      backdrop-filter:blur(15px);
+      font:13px Arial,sans-serif;
+      transition:.35s;
+      pointer-events:none;
+    `;
+    document.body.appendChild(toast);
+  }
+
+  if (!document.getElementById("cursorGlow")) {
+    const glow = document.createElement("div");
+    glow.id = "cursorGlow";
+    glow.style.cssText = `
+      position:fixed;
+      width:180px;
+      height:180px;
+      border-radius:50%;
+      pointer-events:none;
+      z-index:9990;
+      background:radial-gradient(circle,
+        rgba(255,121,183,.14),
+        transparent 68%);
+      transform:translate(-50%,-50%);
+      left:-300px;
+      top:-300px;
+      transition:opacity .3s;
+    `;
+    document.body.appendChild(glow);
+
+    document.addEventListener("mousemove", e => {
+      glow.style.left = e.clientX + "px";
+      glow.style.top = e.clientY + "px";
+    });
+  }
+
+  addDynamicStyles();
 }
 
-/* =========================
+/* =========================================================
+   DYNAMIC STYLE
+========================================================= */
+
+function addDynamicStyles() {
+
+  if (document.getElementById("arDynamicStyle")) return;
+
+  const style = document.createElement("style");
+  style.id = "arDynamicStyle";
+
+  style.textContent = `
+    .card,
+    .featured-card {
+      transform-style:preserve-3d;
+      will-change:transform;
+    }
+
+    .card::after {
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:0;
+      background:
+        radial-gradient(
+          circle at var(--mx,50%) var(--my,50%),
+          rgba(255,121,183,.16),
+          transparent 35%
+        );
+      transition:opacity:.25s;
+    }
+
+    .card:hover::after {
+      opacity:1;
+    }
+
+    .story-meta {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin-top:15px;
+    }
+
+    .story-pill {
+      padding:6px 10px;
+      border-radius:20px;
+      background:rgba(255,121,183,.07);
+      border:1px solid rgba(255,121,183,.15);
+      color:#ff91c7;
+      font:10px Arial,sans-serif;
+    }
+
+    .reader-tools {
+      display:flex;
+      gap:8px;
+      flex-wrap:wrap;
+      margin:20px 0;
+    }
+
+    .reader-tools button {
+      border:1px solid #493544;
+      background:#18111c;
+      color:#eee;
+      border-radius:22px;
+      padding:9px 13px;
+      cursor:pointer;
+      transition:.25s;
+    }
+
+    .reader-tools button:hover {
+      border-color:#ff79b7;
+      color:#ff91c7;
+      transform:translateY(-2px);
+    }
+
+    .continue-reading {
+      margin-top:12px;
+      color:#ff91c7;
+      font:11px Arial,sans-serif;
+    }
+
+    .favorite-active {
+      color:#ff79b7 !important;
+      border-color:#ff79b7 !important;
+      box-shadow:0 0 20px rgba(255,121,183,.12);
+    }
+
+    .reading-word {
+      animation:arWord .35s ease;
+    }
+
+    @keyframes arWord {
+      from {
+        opacity:0;
+        transform:translateY(4px);
+      }
+      to {
+        opacity:1;
+        transform:none;
+      }
+    }
+
+    .story-image-card {
+      width:100%;
+      height:160px;
+      object-fit:cover;
+      border-radius:15px;
+      margin-bottom:15px;
+      display:block;
+    }
+
+    .empty {
+      padding:45px 20px;
+      text-align:center;
+      color:#9b8c98;
+    }
+
+    .empty h3 {
+      color:#eee;
+    }
+
+    @media(max-width:750px) {
+      #cursorGlow {
+        display:none;
+      }
+    }
+  `;
+
+  document.head.appendChild(style);
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+function toast(message) {
+
+  const box = document.getElementById("ar-toast");
+
+  if (!box) return;
+
+  box.textContent = message;
+  box.style.opacity = "1";
+  box.style.transform = "translate(-50%,0)";
+
+  clearTimeout(window.arToastTimer);
+
+  window.arToastTimer = setTimeout(() => {
+    box.style.opacity = "0";
+    box.style.transform = "translate(-50%,20px)";
+  }, 2200);
+}
+
+/* =========================================================
    LOAD STORIES
-========================= */
+========================================================= */
 
 async function loadStories() {
+
   if (grid) {
     grid.innerHTML = `
       <div class="empty">
-        <h3>Loading stories...</h3>
+        <h3>Opening the story universe…</h3>
         <p>Please wait.</p>
       </div>
     `;
@@ -60,17 +266,18 @@ async function loadStories() {
     .from("stories")
     .select("*")
     .order("created_at", {
-      ascending: false
+      ascending:false
     });
 
   if (error) {
-    console.error("Supabase error:", error);
+
+    console.error(error);
 
     if (grid) {
       grid.innerHTML = `
         <div class="empty">
           <h3>Stories load nahi ho paayi.</h3>
-          <p>Please refresh the page.</p>
+          <p>Database connection check karo.</p>
         </div>
       `;
     }
@@ -83,33 +290,48 @@ async function loadStories() {
   updateStoryCount();
   render();
   renderFeatured();
+  restoreLastStory();
 }
 
-/* =========================
+/* =========================================================
    STORY COUNT
-========================= */
+========================================================= */
 
 function updateStoryCount() {
-  const counter = document.getElementById("storyCount");
+
+  const counter =
+    document.getElementById("storyCount");
 
   if (counter) {
-    animateNumber(counter, stories.length);
+
+    animateNumber(
+      counter,
+      stories.length
+    );
   }
 }
 
 function animateNumber(element, target) {
-  const duration = 800;
+
+  let current = 0;
+  const duration = 900;
   const start = performance.now();
 
   function update(time) {
-    const progress = Math.min(
-      (time - start) / duration,
-      1
-    );
 
-    const value = Math.floor(target * progress);
+    const progress =
+      Math.min(
+        (time - start) / duration,
+        1
+      );
 
-    element.textContent = value;
+    current =
+      Math.floor(
+        target * progress
+      );
+
+    element.textContent =
+      current;
 
     if (progress < 1) {
       requestAnimationFrame(update);
@@ -119,47 +341,50 @@ function animateNumber(element, target) {
   requestAnimationFrame(update);
 }
 
-/* =========================
+/* =========================================================
    RENDER STORIES
-========================= */
+========================================================= */
 
 function render() {
+
   if (!grid) return;
 
-  const query = search
-    ? search.value.toLowerCase().trim()
-    : "";
+  const query =
+    search
+      ? search.value.toLowerCase().trim()
+      : "";
 
-  const filtered = stories.filter(function (story) {
-    const title = String(
-      story.title || ""
-    ).toLowerCase();
+  const filtered =
+    stories.filter(story => {
 
-    const body = String(
-      story.body || ""
-    ).toLowerCase();
+      const title =
+        String(
+          story.title || ""
+        ).toLowerCase();
 
-    const storyCategory = String(
-      story.category || ""
-    );
+      const body =
+        String(
+          story.body || ""
+        ).toLowerCase();
 
-    const matchesCategory =
-      category === "All" ||
-      storyCategory === category;
+      const cat =
+        String(
+          story.category || ""
+        );
 
-    const matchesSearch =
-      !query ||
-      title.includes(query) ||
-      body.includes(query) ||
-      storyCategory.toLowerCase().includes(query);
-
-    return (
-      matchesCategory &&
-      matchesSearch
-    );
-  });
+      return (
+        (category === "All" ||
+         cat === category) &&
+        (
+          !query ||
+          title.includes(query) ||
+          body.includes(query)
+        )
+      );
+    });
 
   if (!filtered.length) {
+
     grid.innerHTML = `
       <div class="empty">
         <h3>No stories found</h3>
@@ -170,176 +395,272 @@ function render() {
     return;
   }
 
-  grid.innerHTML = filtered
-    .map(function (story, index) {
-      const image = story.image_url
-        ? `
-          <img
-            src="${escapeHTML(story.image_url)}"
-            alt="${escapeHTML(story.title)}"
-            loading="lazy"
-            style="
-              width:100%;
-              height:160px;
-              object-fit:cover;
-              border-radius:14px;
-              margin-bottom:15px;
-            "
-          >
-        `
-        : "";
+  grid.innerHTML =
+    filtered.map(story => {
+
+      const image =
+        story.image_url
+          ? `
+            <img
+              class="story-image-card"
+              src="${escapeHTML(story.image_url)}"
+              alt="${escapeHTML(story.title)}"
+              loading="lazy"
+            >
+          `
+          : "";
+
+      const saved =
+        isFavorite(story.id);
 
       return `
         <article
-          class="card story-card"
-          data-id="${escapeHTML(story.id)}"
-          style="animation-delay:${index * 0.05}s"
-        >
+          class="card"
+          data-story-id="${escapeHTML(story.id)}">
 
           ${image}
 
           <small>
-            ${escapeHTML(story.category || "Story")}
+            ${escapeHTML(story.category)}
           </small>
 
           <h3>
-            ${escapeHTML(story.title || "Untitled Story")}
+            ${escapeHTML(story.title)}
           </h3>
 
           <p>
-            ${escapeHTML(getPreview(story.body))}
+            ${escapeHTML(story.body)}
           </p>
 
+          <div class="story-meta">
+
+            <span class="story-pill">
+              ✦ Story
+            </span>
+
+            ${
+              saved
+                ? `<span class="story-pill">♥ Saved</span>`
+                : ""
+            }
+
+          </div>
+
           <span class="read">
-            Read story →
+            Open story →
           </span>
 
         </article>
       `;
-    })
-    .join("");
+
+    }).join("");
+
+  attachCardEffects();
+}
+
+/* =========================================================
+   CARD EFFECT
+========================================================= */
+
+function attachCardEffects() {
 
   document
-    .querySelectorAll(".story-card")
-    .forEach(function (card) {
+    .querySelectorAll(".card")
+    .forEach(card => {
+
       card.addEventListener(
         "click",
-        function () {
-          openReader(card.dataset.id);
+        () => {
+
+          openReader(
+            card.dataset.storyId
+          );
+
+        }
+      );
+
+      card.addEventListener(
+        "mousemove",
+        e => {
+
+          const rect =
+            card.getBoundingClientRect();
+
+          const x =
+            e.clientX - rect.left;
+
+          const y =
+            e.clientY - rect.top;
+
+          const rotateY =
+            ((x / rect.width) - .5) * 7;
+
+          const rotateX =
+            ((y / rect.height) - .5) * -7;
+
+          card.style.transform =
+            `
+            perspective(900px)
+            rotateX(${rotateX}deg)
+            rotateY(${rotateY}deg)
+            translateY(-7px)
+            `;
+
+          card.style.setProperty(
+            "--mx",
+            `${x}px`
+          );
+
+          card.style.setProperty(
+            "--my",
+            `${y}px`
+          );
+        }
+      );
+
+      card.addEventListener(
+        "mouseleave",
+        () => {
+
+          card.style.transform =
+            "";
+
         }
       );
     });
 }
 
-/* =========================
+/* =========================================================
    FEATURED
-========================= */
+========================================================= */
 
 function renderFeatured() {
+
   const box =
-    document.getElementById("featuredGrid");
+    document.getElementById(
+      "featuredGrid"
+    );
 
   if (!box) return;
 
-  const featured = stories.slice(0, 3);
+  const featured =
+    stories.slice(0,3);
 
   if (!featured.length) {
+
     box.innerHTML =
       "<p>Stories coming soon...</p>";
 
     return;
   }
 
-  box.innerHTML = featured
-    .map(function (story, index) {
+  box.innerHTML =
+    featured.map(story => {
+
       return `
         <article
           class="featured-card"
-          data-id="${escapeHTML(story.id)}"
-          style="animation-delay:${index * 0.1}s"
-        >
+          data-story-id="${escapeHTML(story.id)}">
 
           <small>
-            ${escapeHTML(story.category || "Story")}
+            ${escapeHTML(story.category)}
           </small>
 
           <h3>
-            ${escapeHTML(story.title || "Untitled Story")}
+            ${escapeHTML(story.title)}
           </h3>
 
           <p>
-            ${escapeHTML(getPreview(story.body, 150))}
+            ${escapeHTML(story.body)}
           </p>
 
           <span class="read">
-            Read story →
+            Discover →
           </span>
 
         </article>
       `;
-    })
-    .join("");
 
-  document
+    }).join("");
+
+  box
     .querySelectorAll(".featured-card")
-    .forEach(function (card) {
+    .forEach(card => {
+
       card.addEventListener(
         "click",
-        function () {
-          openReader(card.dataset.id);
+        () => {
+          openReader(
+            card.dataset.storyId
+          );
         }
       );
+
     });
 }
 
-/* =========================
+/* =========================================================
    FILTERS
-========================= */
+========================================================= */
 
 document
   .querySelectorAll("#filters button")
-  .forEach(function (button) {
+  .forEach(button => {
+
     button.addEventListener(
       "click",
-      function () {
+      () => {
 
         document
           .querySelectorAll("#filters button")
-          .forEach(function (b) {
-            b.classList.remove("on");
-          });
+          .forEach(b =>
+            b.classList.remove("on")
+          );
 
         button.classList.add("on");
 
         category =
-          button.dataset.c || "All";
+          button.dataset.c;
 
         render();
+
+        document
+          .getElementById("stories")
+          ?.scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+          });
       }
     );
   });
 
-/* =========================
+/* =========================================================
    SEARCH
-========================= */
+========================================================= */
 
 if (search) {
+
   search.addEventListener(
     "input",
-    function () {
+    () => {
+
       render();
+
     }
   );
 }
 
-/* =========================
-   STORY READER
-========================= */
+/* =========================================================
+   READER
+========================================================= */
 
 function openReader(id) {
-  const story = stories.find(function (s) {
-    return String(s.id) === String(id);
-  });
+
+  const story =
+    stories.find(
+      s =>
+        String(s.id) === String(id)
+    );
 
   if (!story) return;
 
@@ -354,20 +675,17 @@ function openReader(id) {
   const rb =
     document.getElementById("rb");
 
-  if (rc) {
+  if (rc)
     rc.textContent =
-      story.category || "STORY";
-  }
+      story.category || "";
 
-  if (rt) {
+  if (rt)
     rt.textContent =
-      story.title || "Untitled Story";
-  }
+      story.title || "";
 
-  if (rb) {
+  if (rb)
     rb.textContent =
       story.body || "";
-  }
 
   const imageWrap =
     document.getElementById(
@@ -381,200 +699,543 @@ function openReader(id) {
 
   if (story.image_url) {
 
-    if (image) {
+    if (image)
       image.src =
         story.image_url;
-    }
 
-    if (imageWrap) {
-      imageWrap.classList.add("show");
-    }
+    imageWrap?.classList.add("show");
 
   } else {
 
-    if (image) {
-      image.removeAttribute("src");
-    }
+    if (image)
+      image.src = "";
 
-    if (imageWrap) {
-      imageWrap.classList.remove("show");
-    }
+    imageWrap?.classList.remove("show");
   }
+
+  addReaderTools();
 
   const reader =
     document.getElementById("reader");
 
-  if (reader) {
+  if (reader)
     reader.classList.add("show");
-  }
 
   document.body.style.overflow =
     "hidden";
 
-  resetReadingProgress();
+  saveLastStory(story.id);
+
+  updateFavoriteButton();
+
+  setTimeout(
+    updateReadingProgress,
+    50
+  );
 }
 
-/* =========================
+/* =========================================================
+   READER TOOLS
+========================================================= */
+
+function addReaderTools() {
+
+  const content =
+    document.querySelector(
+      ".reader-content"
+    );
+
+  if (!content) return;
+
+  let tools =
+    document.getElementById(
+      "readerTools"
+    );
+
+  if (tools) return;
+
+  tools =
+    document.createElement("div");
+
+  tools.id =
+    "readerTools";
+
+  tools.className =
+    "reader-tools";
+
+  tools.innerHTML = `
+    <button id="favoriteStory">
+      ♡ Save
+    </button>
+
+    <button id="shareStory">
+      ↗ Share
+    </button>
+
+    <button id="continueMusic">
+      ♪ Mood Music
+    </button>
+  `;
+
+  const paragraph =
+    document.getElementById("rb");
+
+  paragraph?.before(tools);
+
+  document
+    .getElementById("favoriteStory")
+    ?.addEventListener(
+      "click",
+      toggleFavorite
+    );
+
+  document
+    .getElementById("shareStory")
+    ?.addEventListener(
+      "click",
+      shareCurrentStory
+    );
+
+  document
+    .getElementById("continueMusic")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        closeReader();
+
+        document
+          .getElementById("music")
+          ?.scrollIntoView({
+            behavior:"smooth"
+          });
+
+        toast(
+          "Music lounge is ready 🎵"
+        );
+      }
+    );
+}
+
+/* =========================================================
    CLOSE READER
-========================= */
+========================================================= */
 
 function closeReader() {
+
   const reader =
-    document.getElementById("reader");
+    document.getElementById(
+      "reader"
+    );
 
-  if (reader) {
+  if (reader)
     reader.classList.remove("show");
-  }
 
-  document.body.style.overflow = "";
+  document.body.style.overflow =
+    "";
 
   currentStory = null;
 }
 
-/* =========================
+/* =========================================================
    READING PROGRESS
-========================= */
+========================================================= */
 
-const readerBox =
-  document.querySelector(".reader-box");
+function updateReadingProgress() {
 
-if (readerBox) {
+  const readerBox =
+    document.querySelector(
+      ".reader-box"
+    );
+
+  const bar =
+    document.getElementById(
+      "readingProgress"
+    );
+
+  if (!readerBox || !bar)
+    return;
+
   readerBox.addEventListener(
     "scroll",
-    function () {
-
-      const progress =
-        document.getElementById(
-          "readingProgress"
-        );
-
-      if (!progress) return;
+    () => {
 
       const max =
         readerBox.scrollHeight -
         readerBox.clientHeight;
 
-      if (max <= 0) {
-        progress.style.width = "100%";
-        return;
-      }
+      if (max <= 0) return;
 
       const percent =
-        (readerBox.scrollTop / max) * 100;
+        (readerBox.scrollTop / max) *
+        100;
 
-      progress.style.width =
-        Math.min(100, percent) + "%";
+      bar.style.width =
+        Math.min(
+          100,
+          Math.max(0, percent)
+        ) + "%";
+
     }
   );
 }
 
-function resetReadingProgress() {
-  const progress =
-    document.getElementById(
-      "readingProgress"
+/* =========================================================
+   FAVORITES
+========================================================= */
+
+function getFavorites() {
+
+  try {
+
+    return JSON.parse(
+      localStorage.getItem(
+        "ak_ruru_favorites"
+      ) || "[]"
     );
 
-  if (progress) {
-    progress.style.width = "0%";
-  }
+  } catch {
 
-  if (readerBox) {
-    readerBox.scrollTop = 0;
+    return [];
+
   }
 }
 
-/* =========================
+function isFavorite(id) {
+
+  return getFavorites()
+    .map(String)
+    .includes(String(id));
+}
+
+function toggleFavorite() {
+
+  if (!currentStory) return;
+
+  let favorites =
+    getFavorites();
+
+  const id =
+    String(currentStory.id);
+
+  if (favorites.includes(id)) {
+
+    favorites =
+      favorites.filter(
+        x => String(x) !== id
+      );
+
+    toast(
+      "Story removed from favourites"
+    );
+
+  } else {
+
+    favorites.push(id);
+
+    toast(
+      "Story saved ♥"
+    );
+  }
+
+  localStorage.setItem(
+    "ak_ruru_favorites",
+    JSON.stringify(favorites)
+  );
+
+  updateFavoriteButton();
+  render();
+}
+
+function updateFavoriteButton() {
+
+  const button =
+    document.getElementById(
+      "favoriteStory"
+    );
+
+  if (!button || !currentStory)
+    return;
+
+  const saved =
+    isFavorite(currentStory.id);
+
+  button.textContent =
+    saved
+      ? "♥ Saved"
+      : "♡ Save";
+
+  button.classList.toggle(
+    "favorite-active",
+    saved
+  );
+}
+
+/* =========================================================
+   SHARE
+========================================================= */
+
+async function shareCurrentStory() {
+
+  if (!currentStory) return;
+
+  const url =
+    location.href.split("#")[0] +
+    "#story-" +
+    currentStory.id;
+
+  const shareData = {
+    title:
+      currentStory.title ||
+      "AkashRuru Story",
+
+    text:
+      "Read this story on AkashRuru Stories.",
+
+    url
+  };
+
+  try {
+
+    if (
+      navigator.share &&
+      typeof navigator.share === "function"
+    ) {
+
+      await navigator.share(
+        shareData
+      );
+
+    } else {
+
+      await navigator.clipboard.writeText(
+        url
+      );
+
+      toast(
+        "Story link copied 🔗"
+      );
+    }
+
+  } catch (error) {
+
+    if (
+      error &&
+      error.name !== "AbortError"
+    ) {
+      toast(
+        "Share nahi ho paya"
+      );
+    }
+  }
+}
+
+/* =========================================================
    SURPRISE ME
-========================= */
+========================================================= */
 
 function surpriseMe() {
+
   if (!stories.length) {
-    alert(
+
+    toast(
       "Abhi koi story available nahi hai."
     );
 
     return;
   }
 
-  const randomIndex =
-    Math.floor(
-      Math.random() * stories.length
+  const randomStory =
+    stories[
+      Math.floor(
+        Math.random() *
+        stories.length
+      )
+    ];
+
+  document.body.animate(
+    [
+      {
+        filter:"brightness(1)"
+      },
+      {
+        filter:"brightness(1.7)"
+      },
+      {
+        filter:"brightness(1)"
+      }
+    ],
+    {
+      duration:500
+    }
+  );
+
+  setTimeout(() => {
+
+    openReader(
+      randomStory.id
     );
 
-  const randomStory =
-    stories[randomIndex];
-
-  openReader(randomStory.id);
+  }, 220);
 }
 
-/* =========================
+/* =========================================================
+   LAST READ
+========================================================= */
+
+function saveLastStory(id) {
+
+  localStorage.setItem(
+    "ak_ruru_last_story",
+    String(id)
+  );
+}
+
+function restoreLastStory() {
+
+  const id =
+    localStorage.getItem(
+      "ak_ruru_last_story"
+    );
+
+  if (!id) return;
+
+  const story =
+    stories.find(
+      s => String(s.id) === String(id)
+    );
+
+  if (!story) return;
+
+  const about =
+    document.getElementById(
+      "about"
+    );
+
+  if (!about) return;
+
+  let box =
+    document.getElementById(
+      "continueBox"
+    );
+
+  if (!box) {
+
+    box =
+      document.createElement(
+        "div"
+      );
+
+    box.id =
+      "continueBox";
+
+    box.className =
+      "continue-reading";
+
+    box.innerHTML =
+      `
+      ↩ Continue reading:
+      <button
+        style="
+          background:none;
+          border:0;
+          color:#ff91c7;
+          cursor:pointer;
+          font-weight:bold;
+        "
+      >
+        ${escapeHTML(story.title)}
+      </button>
+      `;
+
+    about.appendChild(box);
+
+    box
+      .querySelector("button")
+      .addEventListener(
+        "click",
+        () => openReader(story.id)
+      );
+  }
+}
+
+/* =========================================================
    MUSIC
-========================= */
+========================================================= */
 
 const musicTracks = {
 
   romantic: [
     {
-      name: "Romantic Piano",
+      name:"Romantic Piano",
       url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/solarflex-romantic-495654.mp3"
     }
   ],
 
   sad: [
     {
-      name: "Sad Piano",
+      name:"Sad Piano",
       url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/soundgallerybydmitrytaras-sad-piano-496878.mp3"
     }
   ],
 
   horror: [
     {
-      name: "Horror Ambience",
+      name:"Horror Ambience",
       url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/atlasaudio-horror-ambience-512255.mp3"
     }
   ],
 
   calm: [
     {
-      name: "Calm Night",
+      name:"Calm Night",
       url:
-        "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
+      "https://bxgtcnagqjtfbsztgnmb.supabase.co/storage/v1/object/public/music/paulyudin-sad-piano-music-376015.mp3"
     }
   ]
 };
 
-let currentMood = "romantic";
-let currentTrack = 0;
-
-/* =========================
-   SET MOOD
-========================= */
+/* =========================================================
+   MOOD
+========================================================= */
 
 function setMood(mood) {
-  currentMood = mood;
-  currentTrack = 0;
+
+  currentMood =
+    mood;
+
+  currentTrack =
+    0;
 
   document
     .querySelectorAll(".mood")
-    .forEach(function (button) {
+    .forEach(button => {
 
       button.classList.toggle(
         "active",
         button.dataset.mood === mood
       );
+
     });
 
   loadMusic();
+
+  toast(
+    mood.charAt(0).toUpperCase() +
+    mood.slice(1) +
+    " mood activated ✦"
+  );
 }
 
-/* =========================
+/* =========================================================
    LOAD MUSIC
-========================= */
+========================================================= */
 
 function loadMusic() {
+
   const tracks =
     musicTracks[currentMood] || [];
 
@@ -588,14 +1249,17 @@ function loadMusic() {
       "trackName"
     );
 
-  if (name) {
+  if (name)
     name.textContent =
       track.name;
-  }
 
   if (audio) {
+
     audio.pause();
-    audio.src = track.url;
+
+    audio.src =
+      track.url;
+
     audio.load();
   }
 
@@ -604,94 +1268,77 @@ function loadMusic() {
       "playMusic"
     );
 
-  if (play) {
-    play.textContent = "▶";
-  }
+  if (play)
+    play.textContent =
+      "▶";
 
   const bar =
     document.getElementById(
       "progressBar"
     );
 
-  if (bar) {
-    bar.style.width = "0%";
-  }
+  if (bar)
+    bar.style.width =
+      "0%";
 }
 
-/* =========================
-   PLAY MUSIC
-========================= */
+/* =========================================================
+   PLAY
+========================================================= */
 
 function playMusic() {
-  const player =
-    document.getElementById("audio");
 
-  const button =
-    document.getElementById(
-      "playMusic"
-    );
+  if (!audio) return;
 
-  if (!player) {
-    alert("Audio player nahi mila.");
-    return;
-  }
+  if (audio.paused) {
 
-  const tracks =
-    musicTracks[currentMood] || [];
+    audio.play()
+      .then(() => {
 
-  if (
-    !tracks.length ||
-    !tracks[currentTrack].url
-  ) {
-    alert(
-      "Is mood ka music available nahi hai."
-    );
+        const button =
+          document.getElementById(
+            "playMusic"
+          );
 
-    return;
-  }
-
-  if (player.paused) {
-
-    player
-      .play()
-      .then(function () {
-
-        if (button) {
-          button.textContent = "⏸";
-        }
+        if (button)
+          button.textContent =
+            "⏸";
 
       })
-      .catch(function (error) {
+      .catch(error => {
 
-        console.error(
-          "Audio play error:",
-          error
-        );
+        console.error(error);
 
-        alert(
+        toast(
           "Music play nahi hua."
         );
       });
 
   } else {
 
-    player.pause();
+    audio.pause();
 
-    if (button) {
-      button.textContent = "▶";
-    }
+    const button =
+      document.getElementById(
+        "playMusic"
+      );
+
+    if (button)
+      button.textContent =
+        "▶";
   }
 }
 
-/* =========================
-   NEXT MUSIC
-========================= */
+/* =========================================================
+   NEXT / PREVIOUS
+========================================================= */
 
 function nextMusic() {
+
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks || !tracks.length) return;
+  if (!tracks?.length) return;
 
   currentTrack =
     (currentTrack + 1) %
@@ -700,93 +1347,73 @@ function nextMusic() {
   loadMusic();
 }
 
-/* =========================
-   PREVIOUS MUSIC
-========================= */
-
 function previousMusic() {
+
   const tracks =
     musicTracks[currentMood];
 
-  if (!tracks || !tracks.length) return;
+  if (!tracks?.length) return;
 
   currentTrack =
     (
       currentTrack -
       1 +
       tracks.length
-    ) % tracks.length;
+    ) %
+    tracks.length;
 
   loadMusic();
 }
 
-/* =========================
+/* =========================================================
    MUSIC BUTTONS
-========================= */
+========================================================= */
 
 document
   .querySelectorAll(".mood")
-  .forEach(function (button) {
+  .forEach(button => {
 
     button.addEventListener(
       "click",
-      function () {
-
-        setMood(
-          button.dataset.mood
-        );
-
-      }
+      () => setMood(
+        button.dataset.mood
+      )
     );
   });
 
-const playButton =
-  document.getElementById(
-    "playMusic"
-  );
-
-if (playButton) {
-  playButton.addEventListener(
+document
+  .getElementById("playMusic")
+  ?.addEventListener(
     "click",
     playMusic
   );
-}
 
-const nextButton =
-  document.getElementById(
-    "nextMusic"
-  );
-
-if (nextButton) {
-  nextButton.addEventListener(
+document
+  .getElementById("nextMusic")
+  ?.addEventListener(
     "click",
     nextMusic
   );
-}
 
-const previousButton =
-  document.getElementById(
-    "prevMusic"
-  );
-
-if (previousButton) {
-  previousButton.addEventListener(
+document
+  .getElementById("prevMusic")
+  ?.addEventListener(
     "click",
     previousMusic
   );
-}
 
-/* =========================
+/* =========================================================
    AUDIO PROGRESS
-========================= */
+========================================================= */
 
 if (audio) {
 
   audio.addEventListener(
     "timeupdate",
-    function () {
+    () => {
 
-      if (!audio.duration) return;
+      if (!audio.duration)
+        return;
 
       const percentage =
         (
@@ -799,88 +1426,72 @@ if (audio) {
           "progressBar"
         );
 
-      if (bar) {
+      if (bar)
         bar.style.width =
           percentage + "%";
-      }
     }
   );
 
   audio.addEventListener(
     "ended",
-    function () {
+    () => {
 
       nextMusic();
 
-      if (audio.src) {
-        audio
-          .play()
-          .catch(function () {});
-      }
+      audio.play()
+        .catch(() => {});
+
     }
   );
 }
 
-/* =========================
+/* =========================================================
    MOBILE MENU
-========================= */
+========================================================= */
 
-const menuBtn =
-  document.getElementById(
-    "menuBtn"
-  );
-
-if (menuBtn) {
-
-  menuBtn.addEventListener(
+document
+  .getElementById("menuBtn")
+  ?.addEventListener(
     "click",
-    function () {
+    () => {
 
-      const nav =
-        document.querySelector(
-          ".nav-links"
-        );
+      document
+        .querySelector(".nav-links")
+        ?.classList.toggle("open");
 
-      if (nav) {
-        nav.classList.toggle(
-          "open"
-        );
-      }
     }
   );
-}
 
-/* =========================
-   CLOSE READER
-========================= */
+/* =========================================================
+   READER BACKDROP
+========================================================= */
 
 const reader =
-  document.getElementById(
-    "reader"
-  );
+  document.getElementById("reader");
 
 if (reader) {
 
   reader.addEventListener(
     "click",
-    function (event) {
+    event => {
 
       if (
         event.target === reader
       ) {
         closeReader();
       }
+
     }
   );
 }
 
-/* =========================
-   ESC KEY
-========================= */
+/* =========================================================
+   ESCAPE
+========================================================= */
 
 document.addEventListener(
   "keydown",
-  function (event) {
+  event => {
 
     if (event.key === "Escape") {
       closeReader();
@@ -890,56 +1501,62 @@ document.addEventListener(
       event.key === "/" &&
       document.activeElement !== search
     ) {
+
       event.preventDefault();
 
-      if (search) {
-        search.focus();
-      }
+      search?.focus();
     }
   }
 );
 
-/* =========================
-   YEAR
-========================= */
+/* =========================================================
+   HASH STORY
+========================================================= */
 
-const year =
-  document.getElementById(
-    "year"
-  );
+function openHashStory() {
 
-if (year) {
-  year.textContent =
-    new Date().getFullYear();
+  const hash =
+    location.hash;
+
+  if (!hash.startsWith("#story-"))
+    return;
+
+  const id =
+    hash.replace(
+      "#story-",
+      ""
+    );
+
+  const story =
+    stories.find(
+      s => String(s.id) === String(id)
+    );
+
+  if (story)
+    openReader(story.id);
 }
 
-/* =========================
-   LOADER
-========================= */
-
 window.addEventListener(
-  "load",
-  function () {
-
-    setTimeout(function () {
-
-      const loader =
-        document.getElementById(
-          "loader"
-        );
-
-      if (loader) {
-        loader.style.pointerEvents =
-          "none";
-      }
-
-    }, 2000);
-  }
+  "hashchange",
+  openHashStory
 );
 
-/* =========================
+/* =========================================================
+   YEAR
+========================================================= */
+
+const year =
+  document.getElementById("year");
+
+if (year)
+  year.textContent =
+    new Date().getFullYear();
+
+/* =========================================================
    START
-========================= */
+========================================================= */
+
+createExtraUI();
 
 setMood("romantic");
 
